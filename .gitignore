@@ -1,3 +1,6 @@
 /idea
 /.idea
-__pycache__/
+.idea
+__pycache__
+my_pages/__pycache__*
+*.pyc

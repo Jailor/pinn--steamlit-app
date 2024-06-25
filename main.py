@@ -19,7 +19,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split, KFold, cross_validate
 from sklearn.metrics import root_mean_squared_error, mean_squared_error, r2_score, mean_absolute_error, mean_absolute_percentage_error
 from my_pages.documentation import show_documentation
-from my_pages.data_exploration import show_data_exploration
+from my_pages.data_exploration import show_data_exploration_statistics, show_data_exploration_time_series_analysis
 from my_pages.interactive_data_filtering import show_interactive_data_filtering
 from my_pages.interactive_model_comparison import show_interactive_model_comparison
 from my_pages.interactive_model_comparison_with_physics import show_interactive_model_comparison_with_physics
@@ -53,8 +53,7 @@ if 'uploaded_file' not in st.session_state:
             st.session_state['uploaded_file'] = uploaded_file
             st.rerun()
         except Exception as e:
-            st.error(f"Error loading data: {e}")
-            uploaded_file = None
+            print(f"Error loading data: {e}")
             reset_state_and_prompt()
 
 
@@ -65,19 +64,23 @@ if 'uploaded_file' in st.session_state:
         standard_model, pinn_model = load_models()
         feature_importance_df = get_feature_importances(initial_df)
     except Exception as e:
-        st.error(f"Error processing data or loading models: {e}")
+        print(f"Error processing data or loading models: {e}")
         reset_state_and_prompt()
 
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["Documentation and Explanation", "Data Exploration",
+    page = st.sidebar.radio("Go to", ["Documentation and Explanation",
+                                      "Data Exploration Statistics", "Data Exploration Time Series Analysis",
                                       "Interactive Model Comparison", "Interactive Model Comparison with Physics",
                                       "Performance Metrics", "Interactive Data Filtering"])
 
     if page == "Documentation and Explanation":
         show_documentation()
 
-    elif page == "Data Exploration":
-        show_data_exploration(initial_df, feature_importance_df)
+    elif page == "Data Exploration Statistics":
+        show_data_exploration_statistics(initial_df, feature_importance_df)
+
+    elif page == "Data Exploration Time Series Analysis":
+        show_data_exploration_time_series_analysis(initial_df)
 
     elif page == "Interactive Model Comparison":
         show_interactive_model_comparison(standard_model, pinn_model)
@@ -90,7 +93,4 @@ if 'uploaded_file' in st.session_state:
 
     elif page == "Interactive Data Filtering":
         show_interactive_data_filtering(initial_df, standard_model, pinn_model)
-
-    if page == "Interactive Model Comparison":
-        show_interactive_model_comparison(standard_model, pinn_model)
 

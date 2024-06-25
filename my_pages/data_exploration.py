@@ -3,7 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 
-def show_data_exploration(initial_df, feature_importance_df):
+def show_data_exploration_statistics(initial_df, feature_importance_df):
     st.title('Data Exploration')
 
     # Add the information section
@@ -70,57 +70,6 @@ def show_data_exploration(initial_df, feature_importance_df):
         )
         st.plotly_chart(fig_hist)
 
-    st.subheader('Time Series Analysis (Weekly Aggregated)')
-    initial_df_resampled = initial_df.resample('W').mean()
-    for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
-                'Heat Trace (W)']:
-        fig_ts = px.line(initial_df_resampled, x=initial_df_resampled.index, y=col,
-                         title=f'Weekly Time Series of {col}')
-        fig_ts.update_layout(
-            xaxis_title='Time',
-            yaxis_title=col,
-            title=f'Weekly Time Series of {col}',
-            yaxis=dict(tickformat=".2f")
-        )
-        st.plotly_chart(fig_ts)
-
-    st.subheader('Time Series Analysis (Interactive)')
-    for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
-                'Heat Trace (W)']:
-        fig_ts = go.Figure()
-        fig_ts.add_trace(go.Scatter(x=initial_df.index, y=initial_df[col], mode='lines', name=col))
-        fig_ts.update_layout(
-            title=f'Time Series of {col}',
-            xaxis_title='Time',
-            yaxis_title=col,
-            xaxis=dict(
-                rangeslider=dict(
-                    visible=True
-                ),
-                type="date"
-            )
-        )
-        st.plotly_chart(fig_ts)
-
-    st.subheader('Time Series Analysis (Smoothed with Moving Average)')
-
-    # Add a slider for the moving average window size
-    window_size = st.slider('Select Moving Average Window Size', min_value=1, max_value=60, value=21, step=1)
-
-    initial_df_ma = initial_df.copy()
-    for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
-                'Heat Trace (W)']:
-        initial_df_ma[f'{col}_MA'] = initial_df_ma[col].rolling(window=window_size).mean()
-        fig_ts = px.line(initial_df_ma, x=initial_df_ma.index, y=f'{col}_MA',
-                         title=f'Moving Average Time Series of {col}')
-        fig_ts.update_layout(
-            xaxis_title='Time',
-            yaxis_title=col,
-            title=f'Moving Average Time Series of {col} (Window Size: {window_size})',
-            yaxis=dict(tickformat=".2f")
-        )
-        st.plotly_chart(fig_ts)
-
     # Add scatter matrix plot
 
     short_column_names = {
@@ -151,3 +100,55 @@ def show_data_exploration(initial_df, feature_importance_df):
         title='Heatmap of Missing Values'
     )
     st.plotly_chart(fig_missing)
+
+
+def show_data_exploration_time_series_analysis(initial_df):
+    with st.expander('Time Series Analysis (Weekly Aggregated)', expanded=True):
+        initial_df_resampled = initial_df.resample('W').mean()
+        for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
+                    'Heat Trace (W)']:
+            fig_ts = px.line(initial_df_resampled, x=initial_df_resampled.index, y=col,
+                             title=f'Weekly Time Series of {col}')
+            fig_ts.update_layout(
+                xaxis_title='Time',
+                yaxis_title=col,
+                title=f'Weekly Time Series of {col}',
+                yaxis=dict(tickformat=".2f")
+            )
+            st.plotly_chart(fig_ts)
+
+    with st.expander('Time Series Analysis (Interactive)', expanded=False):
+        for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
+                    'Heat Trace (W)']:
+            fig_ts = go.Figure()
+            fig_ts.add_trace(go.Scatter(x=initial_df.index, y=initial_df[col], mode='lines', name=col))
+            fig_ts.update_layout(
+                title=f'Time Series of {col}',
+                xaxis_title='Time',
+                yaxis_title=col,
+                xaxis=dict(
+                    rangeslider=dict(
+                        visible=True
+                    ),
+                    type="date"
+                )
+            )
+            st.plotly_chart(fig_ts)
+
+    with st.expander('Time Series Analysis (Smoothed with Moving Average)', expanded=False):
+        # Add a slider for the moving average window size
+        window_size = st.slider('Select Moving Average Window Size', min_value=1, max_value=60, value=21, step=1)
+
+        initial_df_ma = initial_df.copy()
+        for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
+                    'Heat Trace (W)']:
+            initial_df_ma[f'{col}_MA'] = initial_df_ma[col].rolling(window=window_size).mean()
+            fig_ts = px.line(initial_df_ma, x=initial_df_ma.index, y=f'{col}_MA',
+                             title=f'Moving Average Time Series of {col}')
+            fig_ts.update_layout(
+                xaxis_title='Time',
+                yaxis_title=col,
+                title=f'Moving Average Time Series of {col} (Window Size: {window_size})',
+                yaxis=dict(tickformat=".2f")
+            )
+            st.plotly_chart(fig_ts)
