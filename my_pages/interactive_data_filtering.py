@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from sklearn.metrics import root_mean_squared_error, r2_score, mean_absolute_error, mean_absolute_percentage_error
 
-def show_interactive_data_filtering(initial_df, standard_model, pinn_model):
+def show_interactive_data_filtering(initial_df, standard_model, pinn_model, target_column = 'Water Heating Load (Btu)',):
     st.title('Interactive Data Filtering')
     st.subheader('Interactive Data Filtering')
     st.sidebar.subheader('Filter Data')
@@ -54,8 +54,8 @@ def show_interactive_data_filtering(initial_df, standard_model, pinn_model):
 
         if not filtered_df.empty:
             # Predict with filtered data
-            X_filtered = filtered_df.drop(columns=['Water Heating Load (Btu)'])
-            y_filtered = filtered_df['Water Heating Load (Btu)']
+            X_filtered = filtered_df.drop(columns=[target_column])
+            y_filtered = filtered_df[target_column]
 
             start_time = time.time()
             standard_pred_filtered = standard_model.predict(X_filtered)

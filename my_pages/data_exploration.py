@@ -102,11 +102,11 @@ def show_data_exploration_statistics(initial_df, feature_importance_df):
     st.plotly_chart(fig_missing)
 
 
-def show_data_exploration_time_series_analysis(initial_df):
+def show_data_exploration_time_series_analysis_generic(initial_df):
+    columns = initial_df.columns
     with st.expander('Time Series Analysis (Weekly Aggregated)', expanded=True):
         initial_df_resampled = initial_df.resample('W').mean()
-        for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
-                    'Heat Trace (W)']:
+        for col in columns:
             fig_ts = px.line(initial_df_resampled, x=initial_df_resampled.index, y=col,
                              title=f'Weekly Time Series of {col}')
             fig_ts.update_layout(
@@ -118,8 +118,7 @@ def show_data_exploration_time_series_analysis(initial_df):
             st.plotly_chart(fig_ts)
 
     with st.expander('Time Series Analysis (Interactive)', expanded=False):
-        for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
-                    'Heat Trace (W)']:
+        for col in columns:
             fig_ts = go.Figure()
             fig_ts.add_trace(go.Scatter(x=initial_df.index, y=initial_df[col], mode='lines', name=col))
             fig_ts.update_layout(
@@ -140,8 +139,7 @@ def show_data_exploration_time_series_analysis(initial_df):
         window_size = st.slider('Select Moving Average Window Size', min_value=1, max_value=60, value=21, step=1)
 
         initial_df_ma = initial_df.copy()
-        for col in ['Hot Water Temp (F)', 'Cold Water Temp (F)', 'Inlet Temp (F)', 'Water Flow (Gallons)', 'Watts',
-                    'Heat Trace (W)']:
+        for col in columns:
             initial_df_ma[f'{col}_MA'] = initial_df_ma[col].rolling(window=window_size).mean()
             fig_ts = px.line(initial_df_ma, x=initial_df_ma.index, y=f'{col}_MA',
                              title=f'Moving Average Time Series of {col}')
@@ -152,3 +150,65 @@ def show_data_exploration_time_series_analysis(initial_df):
                 yaxis=dict(tickformat=".2f")
             )
             st.plotly_chart(fig_ts)
+
+
+def show_data_exploration_statistics_generic(initial_df, feature_importance_df):
+    st.title('Data Exploration')
+
+    st.subheader('Dataset Summary')
+    st.write(initial_df.describe())
+
+    st.subheader('Correlation Matrix')
+    corr_matrix = initial_df.corr()
+    fig_corr = px.imshow(
+        corr_matrix,
+        text_auto=True,
+        x=corr_matrix.columns,
+        y=corr_matrix.columns,
+        color_continuous_scale='hot',
+        aspect='auto'
+    )
+    fig_corr.update_layout(
+        xaxis_title='Features',
+        yaxis_title='Features',
+        title='Correlation Matrix'
+    )
+    st.plotly_chart(fig_corr, use_container_width=True)
+
+    st.subheader('Feature Importance')
+    # feature importance previously calculated
+    fig_importance = px.bar(feature_importance_df, x='Feature', y='Importance')
+    fig_importance.update_yaxes(type='log')
+    st.plotly_chart(fig_importance)
+
+    # Add histograms of the data
+    st.subheader('Data Distributions')
+
+    # Loop through each column in the dataframe and plot histograms
+    for col in initial_df.columns:
+        fig_hist = px.histogram(initial_df, x=col, nbins=30, title=f'Distribution of {col}')
+        fig_hist.update_layout(
+            xaxis_title=col,
+            yaxis_title='Count',
+            title=f'Distribution of {col}'
+        )
+        st.plotly_chart(fig_hist)
+
+    st.subheader('Scatter Matrix Plot')
+    fig_scatter_matrix = px.scatter_matrix(initial_df)
+    fig_scatter_matrix.update_layout(
+        title='Scatter Matrix Plot',
+        width=1000,
+        height=1000,
+    )
+    st.plotly_chart(fig_scatter_matrix)
+
+    # Add heatmap for missing values
+    st.subheader('Heatmap of Missing Values')
+    fig_missing = px.imshow(initial_df.isna(), color_continuous_scale='viridis', aspect='auto')
+    fig_missing.update_layout(
+        xaxis_title='Features',
+        yaxis_title='Samples',
+        title='Heatmap of Missing Values'
+    )
+    st.plotly_chart(fig_missing)

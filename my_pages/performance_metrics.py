@@ -5,11 +5,12 @@ import plotly.graph_objects as go
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import root_mean_squared_error, r2_score, mean_absolute_error
 
-def show_performance_metrics(initial_df, standard_model, pinn_model):
+
+def show_performance_metrics(initial_df, standard_model, pinn_model, target_column='Water Heating Load (Btu)'):
     st.title('Model Performance Metrics')
 
-    X = initial_df.drop(columns=['Water Heating Load (Btu)'])
-    y = initial_df['Water Heating Load (Btu)']
+    X = initial_df.drop(columns=[target_column])
+    y = initial_df[target_column]
 
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

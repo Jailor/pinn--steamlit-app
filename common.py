@@ -3,59 +3,37 @@ import streamlit as st
 from keras.models import load_model
 from sklearn.ensemble import RandomForestRegressor
 import time
+import difflib
 
 def pinn_loss(y_true_with_features, y_pred):
     pass
 
 
-# TODO: see about the custom loss function and further training
-# alpha = 0.1
-# def pinn_loss(y_true_with_features, y_pred):
-#     y_true = y_true_with_features[:, 0:1]
-#     outlet_water_temp = y_true_with_features[:, 1:2]
-#     inlet_water_temp = y_true_with_features[:, 2:3]
-#     inlet_temp = y_true_with_features[:, 3:4]
-#     water_flow = y_true_with_features[:, 4:5]
-#     watts = y_true_with_features[:, 5:6]
-#     heat_trace = y_true_with_features[:, 6:7]
-#     specific_heat_capacity = 4174  # J/kg°C, specific heat capacity of water
-#     gallons_to_liters = 3.78541  # 1 gallon = 3.78541 liters
-#     fahrenheit_to_celsius = lambda f: (f - 32) * 5.0 / 9.0  # Convert °F to °C
-#     joules_to_btu = 0.0009478171
-#     flow_rate_liters = water_flow * gallons_to_liters
-#     inlet_temp_c = fahrenheit_to_celsius(inlet_temp)
-#     outlet_temp_c = fahrenheit_to_celsius(outlet_water_temp)
-#     heat_output = water_flow * (outlet_water_temp - inlet_temp) * 0.997 * 8.3077
-#     return K.mean(K.abs(y_true - y_pred) + alpha * K.abs(heat_output - y_pred), axis=-1)
-
-
-# TODO: retrain the models
 @st.cache_resource
 def load_models():
     standard_model = load_model('models/classic_full.h5')
     pinn_model = load_model('models/pinn_full.h5', custom_objects={'pinn_loss': pinn_loss}, compile=False)
 
-    # TODO: recompiling for further training?
-    # standard_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_absolute_error',
-    #               metrics=[
-    #                   tf.keras.metrics.RootMeanSquaredError(),
-    #                   tf.keras.metrics.R2Score(),
-    #                   tf.keras.metrics.MeanAbsoluteError()
-    #               ])
-    # pinn_model.compile(optimizer=Adam(learning_rate=0.001), loss=pinn_loss,
-    #                    metrics=[
-    #                        tf.keras.metrics.RootMeanSquaredError(),
-    #                        tf.keras.metrics.MeanAbsoluteError(),
-    #                        tf.keras.metrics.MeanAbsoluteError()])
-
     return standard_model, pinn_model
+
 
 @st.cache_resource
 def load_simplified_models():
-    standard_model = load_model('models/phys/nn_1024.h5') # classic_simple
-    pinn_model = load_model('models/phys/phys_simple.h5', custom_objects={'pinn_loss': pinn_loss}, compile=False) # best_model_phys_only
+    standard_model = load_model('models/phys/nn_1024.h5')  # classic_simple
+    pinn_model = load_model('models/phys/phys_simple.h5', custom_objects={'pinn_loss': pinn_loss},
+                            compile=False)  # best_model_phys_only
 
     return standard_model, pinn_model
+
+
+@st.cache_resource
+def load_data_rossland_site1():
+    try:
+        df = pd.read_csv('Rossland Site 1.csv', sep=';', low_memory=False)
+        return df
+    except Exception as e:
+        print(f"An error occurred while reading Rossland: {e}")
+        return None
 
 
 @st.cache_resource
@@ -68,46 +46,52 @@ def load_data(uploaded_file):
             return None
 
         # Try reading the file with the specified delimiter
-        df = pd.read_csv(uploaded_file, sep=';', low_memory=False)
+        df = pd.read_csv(uploaded_file, low_memory=False)
         if df.empty:
-            st.error("No data found in the file. Please check the file content.")
+            print("No data found in the file. Please check the file content.")
             return None
     except pd.errors.EmptyDataError:
-        st.error("The uploaded file has no columns to parse. Please check the delimiter and file format.")
+        print("The uploaded file has no columns to parse. Please check the delimiter and file format.")
         return None
     except Exception as e:
-        st.error(f"An error occurred while reading the file: {e}")
+        print(f"An error occurred while reading the file: {e}")
         return None
 
-    # Drop bad data
-    df.drop('ID', axis=1, inplace=True)
-    df.drop('Uncorrected Water Flow (Gallons)', axis=1, inplace=True)
-    df.drop('Uncorrected Hot Water Temp (F)', axis=1, inplace=True)
-    df.drop('Uncorrected Cold Water Temp (F)', axis=1, inplace=True)
-    df.drop('Site', axis=1, inplace=True)
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-    df.set_index('Timestamp', inplace=True)
+    rossland_df = load_data_rossland_site1()
 
-    df['Watts'] = df['Watts'].astype(str)
-    df['Water Heating Load (Btu)'] = df['Water Heating Load (Btu)'].astype(str)
+    if not df.equals(rossland_df):
+        return df, df
+    else:
+        raw_df = df.copy()
+        # Drop bad data
+        df.drop('ID', axis=1, inplace=True)
+        df.drop('Uncorrected Water Flow (Gallons)', axis=1, inplace=True)
+        df.drop('Uncorrected Hot Water Temp (F)', axis=1, inplace=True)
+        df.drop('Uncorrected Cold Water Temp (F)', axis=1, inplace=True)
+        df.drop('Site', axis=1, inplace=True)
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+        df.set_index('Timestamp', inplace=True)
 
-    # Convert non-numeric values to NaN
-    df['Watts'] = pd.to_numeric(df['Watts'], errors='coerce')
-    df['Water Heating Load (Btu)'] = pd.to_numeric(df['Water Heating Load (Btu)'], errors='coerce')
-    df.dropna(inplace=True)
+        df['Watts'] = df['Watts'].astype(str)
+        df['Water Heating Load (Btu)'] = df['Water Heating Load (Btu)'].astype(str)
 
-    # Resample the data to hourly intervals
-    df = df.resample('h').agg({
-        'Hot Water Temp (F)': 'mean',
-        'Cold Water Temp (F)': 'mean',
-        'Water Flow (Gallons)': 'sum',
-        'Inlet Temp (F)': 'mean',
-        'Watts': 'mean',
-        'Heat Trace (W)': 'mean',
-        'Water Heating Load (Btu)': 'sum'
-    })
-    df.dropna(inplace=True)
-    return df
+        # Convert non-numeric values to NaN
+        df['Watts'] = pd.to_numeric(df['Watts'], errors='coerce')
+        df['Water Heating Load (Btu)'] = pd.to_numeric(df['Water Heating Load (Btu)'], errors='coerce')
+        df.dropna(inplace=True)
+
+        # Resample the data to hourly intervals
+        df = df.resample('h').agg({
+            'Hot Water Temp (F)': 'mean',
+            'Cold Water Temp (F)': 'mean',
+            'Water Flow (Gallons)': 'sum',
+            'Inlet Temp (F)': 'mean',
+            'Watts': 'mean',
+            'Heat Trace (W)': 'mean',
+            'Water Heating Load (Btu)': 'sum'
+        })
+        df.dropna(inplace=True)
+        return df, raw_df
 
 
 @st.cache_data
@@ -121,3 +105,77 @@ def get_feature_importances(initial_df):
     feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False)
     return feature_importance_df
 
+
+def get_most_similar_column(target, columns):
+    matches = difflib.get_close_matches(target, columns, n=1, cutoff=0.0)
+    return matches[0] if matches else None
+
+
+def prompt_user_for_columns(df):
+    st.subheader("Dataset Columns")
+    st.write("Please select the columns to keep and map the necessary columns for the analysis.")
+
+    columns_to_keep = st.multiselect("Select columns to keep", options=df.columns, default=df.columns.tolist())
+
+    if len(columns_to_keep) == 0:
+        st.error("Please select at least one column.")
+        return None, None, None, None, None, None
+
+    df = df[columns_to_keep]
+
+    # Find the most similar column names
+    default_water_flow_column = get_most_similar_column("water flow", columns_to_keep)
+    default_outlet_water_temp_column = get_most_similar_column("outlet water temp", columns_to_keep)
+    default_inlet_temp_column = get_most_similar_column("inlet temp", columns_to_keep)
+    default_timestamp_column = get_most_similar_column("timestamp", columns_to_keep)
+    default_heating_load_column = get_most_similar_column("heating load", columns_to_keep)
+
+    with st.form("column_mapping"):
+        water_flow_column = st.selectbox("Select the column for water flow", options=columns_to_keep, index=columns_to_keep.index(default_water_flow_column) if default_water_flow_column else 0)
+        outlet_water_temp_column = st.selectbox("Select the column for outlet water temperature", options=columns_to_keep, index=columns_to_keep.index(default_outlet_water_temp_column) if default_outlet_water_temp_column else 0)
+        inlet_temp_column = st.selectbox("Select the column for inlet temperature", options=columns_to_keep, index=columns_to_keep.index(default_inlet_temp_column) if default_inlet_temp_column else 0)
+        timestamp_column = st.selectbox("Select the column for timestamp", options=columns_to_keep, index=columns_to_keep.index(default_timestamp_column) if default_timestamp_column else 0)
+        heating_load_column = st.selectbox("Select the column for heating load", options=columns_to_keep, index=columns_to_keep.index(default_heating_load_column) if default_heating_load_column else 0)
+        submitted = st.form_submit_button("Submit")
+
+    if submitted:
+        st.session_state['columns_selected'] = True
+        st.session_state['columns'] = {
+            'water_flow': water_flow_column,
+            'outlet_water_temp': outlet_water_temp_column,
+            'inlet_temp': inlet_temp_column,
+            'timestamp': timestamp_column,
+            'heating_load': heating_load_column
+        }
+        st.session_state['filtered_df'] = df
+        st.rerun()
+
+
+@st.cache_data
+def process_new_dataset(df, water_flow_column, outlet_water_temp_column, inlet_temp_column, timestamp_column, heating_load_column):
+    df[timestamp_column] = pd.to_datetime(df[timestamp_column])
+    df.set_index(timestamp_column, inplace=True)
+
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    # Drop columns that are entirely NaN
+    df.dropna(axis=1, how='all', inplace=True)
+
+    # Create a dictionary for aggregation
+    agg_dict = {
+        water_flow_column: 'sum',
+        outlet_water_temp_column: 'mean',
+        inlet_temp_column: 'mean',
+        heating_load_column: 'sum'
+    }
+
+    # Add other columns to be resampled by their mean
+    for col in df.columns:
+        if col not in agg_dict:
+            agg_dict[col] = 'mean'
+
+    # Resample the data to hourly intervals
+    df = df.resample('h').agg(agg_dict)
+    df.dropna(inplace=True)
+    return df
