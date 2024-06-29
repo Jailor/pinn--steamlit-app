@@ -24,7 +24,7 @@ from my_pages.interactive_data_filtering import show_interactive_data_filtering
 from my_pages.interactive_model_comparison import show_interactive_model_comparison
 from my_pages.interactive_model_comparison_with_physics import show_interactive_model_comparison_with_physics
 from my_pages.performance_metrics import show_performance_metrics
-from common import load_models, load_data, pinn_loss, get_feature_importances
+from common import load_models, load_data, pinn_loss, get_feature_importances, load_simplified_models
 
 def reset_state_and_prompt():
     st.session_state.pop('uploaded_file', None)
@@ -59,9 +59,16 @@ if 'uploaded_file' not in st.session_state:
 
 # If a file has been uploaded, use it
 if 'uploaded_file' in st.session_state:
+    initial_df = None
+    standard_model = None
+    pinn_model = None
+    feature_importance_df = None
+    standard_model_simple = None
+    pinn_model_simple = None
     try:
         initial_df = st.session_state['initial_df']
         standard_model, pinn_model = load_models()
+        standard_model_simple, pinn_model_simple = load_simplified_models()
         feature_importance_df = get_feature_importances(initial_df)
     except Exception as e:
         print(f"Error processing data or loading models: {e}")
@@ -86,7 +93,7 @@ if 'uploaded_file' in st.session_state:
         show_interactive_model_comparison(standard_model, pinn_model)
     # TODO: train some models only with the physics-related data
     elif page == "Interactive Model Comparison with Physics":
-        show_interactive_model_comparison_with_physics(standard_model, pinn_model)
+        show_interactive_model_comparison_with_physics(standard_model_simple, pinn_model_simple)
 
     elif page == "Performance Metrics":
         show_performance_metrics(initial_df, standard_model, pinn_model)

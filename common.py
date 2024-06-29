@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from keras.models import load_model
 from sklearn.ensemble import RandomForestRegressor
-
+import time
 
 def pinn_loss(y_true_with_features, y_pred):
     pass
@@ -32,8 +32,8 @@ def pinn_loss(y_true_with_features, y_pred):
 # TODO: retrain the models
 @st.cache_resource
 def load_models():
-    standard_model = load_model('best_model.h5')
-    pinn_model = load_model('pinn_model.h5', custom_objects={'pinn_loss': pinn_loss}, compile=False)
+    standard_model = load_model('models/classic_full.h5')
+    pinn_model = load_model('models/pinn_full.h5', custom_objects={'pinn_loss': pinn_loss}, compile=False)
 
     # TODO: recompiling for further training?
     # standard_model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_absolute_error',
@@ -47,6 +47,13 @@ def load_models():
     #                        tf.keras.metrics.RootMeanSquaredError(),
     #                        tf.keras.metrics.MeanAbsoluteError(),
     #                        tf.keras.metrics.MeanAbsoluteError()])
+
+    return standard_model, pinn_model
+
+@st.cache_resource
+def load_simplified_models():
+    standard_model = load_model('models/phys/nn_1024.h5') # classic_simple
+    pinn_model = load_model('models/phys/phys_simple.h5', custom_objects={'pinn_loss': pinn_loss}, compile=False) # best_model_phys_only
 
     return standard_model, pinn_model
 
