@@ -3,7 +3,7 @@ pip
 wheel
 h5py
 pandas
-numpy
+numpy<2.0.0
 tensorflow
 keras
 scikit-learn
