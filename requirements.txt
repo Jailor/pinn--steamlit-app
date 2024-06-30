@@ -1,0 +1,10 @@
+streamlit
+pip
+wheel
+h5py
+pandas
+numpy
+tensorflow
+keras
+scikit-learn
+plotly
