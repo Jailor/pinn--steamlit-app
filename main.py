@@ -21,7 +21,7 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from sklearn.model_selection import train_test_split, KFold, cross_validate
 from sklearn.metrics import root_mean_squared_error, mean_squared_error, r2_score, mean_absolute_error, \
     mean_absolute_percentage_error
-from my_pages.documentation import show_documentation
+from my_pages.documentation import show_documentation, show_documentation_initial
 from my_pages.data_exploration import show_data_exploration_statistics, \
     show_data_exploration_time_series_analysis_generic, show_data_exploration_statistics_generic
 from my_pages.interactive_data_filtering import show_interactive_data_filtering
@@ -32,7 +32,8 @@ from my_pages.interactive_model_comparison_with_physics import show_interactive_
 from my_pages.performance_metrics import show_performance_metrics
 from common import load_models, load_data, pinn_loss, get_feature_importances, \
     load_simplified_models, prompt_user_for_columns, process_new_dataset, train_and_evaluate_physics_model, \
-    train_and_evaluate_model, reset_state_and_prompt, load_existing_datasets, process_existing_dataset
+    train_and_evaluate_model, reset_state_and_prompt, load_existing_datasets, process_existing_dataset, \
+    prompt_user_for_partial_columns
 
 load_existing_datasets()
 
@@ -60,7 +61,7 @@ if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.sess
             initial_df = load_data(uploaded_file)
             st.session_state['initial_df'] = initial_df
             st.session_state['uploaded_file'] = uploaded_file
-            st.session_state['is_new_dataset'] = True
+            # st.session_state['is_new_dataset'] = True
             st.rerun()
         except Exception as e:
             print(f"Error loading data: {e}")
@@ -74,7 +75,7 @@ if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.sess
             initial_df = process_existing_dataset(initial_df, selected_dataset)
             st.session_state['initial_df'] = initial_df
             st.session_state['selected_dataset'] = selected_dataset
-            st.session_state['is_new_dataset'] = False
+            # st.session_state['is_new_dataset'] = False
             st.rerun()
         except Exception as e:
             print(f"Error loading data: {e}")
@@ -84,11 +85,30 @@ if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.sess
 # If a file has been uploaded, use it
 if 'uploaded_file' in st.session_state:
     initial_df = st.session_state['initial_df']
-    rossland_df = st.session_state['rossland_df']
 
-    if 'columns_selected' not in st.session_state:
-        st.title('New Dataset Detected')
-        prompt_user_for_columns(initial_df)
+    if 'timestamp_column' not in st.session_state:
+        prompt_user_for_partial_columns(initial_df)
+
+    elif 'columns_selected' not in st.session_state:
+        filtered_df = st.session_state['filtered_df_initial']
+        st.sidebar.title("Navigation")
+        page = st.sidebar.radio("Go to", ["Documentation and Explanation",
+                                          "Data Exploration Statistics",
+                                          "Data Exploration Time Series Analysis",
+                                          "Process Dataset"])
+        if 'is_reduced_dataset' in st.session_state and st.session_state['is_reduced_dataset']:
+            st.sidebar.warning("The dataset has been automatically reduced to 50k elements to preserve performance.")
+
+        if page == "Documentation and Explanation":
+            show_documentation_initial()
+        elif page == "Data Exploration Statistics":
+            show_data_exploration_statistics_generic(filtered_df)
+        elif page == "Data Exploration Time Series Analysis":
+            show_data_exploration_time_series_analysis_generic(filtered_df, short=True)
+        elif page == "Process Dataset":
+            prompt_user_for_columns(initial_df.copy())
+        else:
+            st.write("Not implemented yet")
     else:
         columns = st.session_state['columns']
 
@@ -150,6 +170,8 @@ if 'uploaded_file' in st.session_state:
 
             else:
                 st.write("Not implemented yet")
+
+
 
 
 if 'selected_dataset' in st.session_state:

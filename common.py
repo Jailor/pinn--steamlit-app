@@ -52,11 +52,11 @@ def train_and_evaluate_model(df, target_column, simple=False):
 
     # Build the model
     model = Sequential()
-    model.add(Dense(256, input_dim=X_train.shape[1], activation='relu'))
-    model.add(Dense(256, activation='relu'))
+    model.add(Dense(227, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(227, activation='relu'))
     model.add(Dense(1, activation='linear'))
 
-    model.compile(optimizer=Adam(), loss='mean_absolute_error',
+    model.compile(optimizer=Adam(learning_rate = 0.0009323), loss='mean_absolute_error',
                   metrics=[
                       keras.metrics.RootMeanSquaredError(),
                       keras.metrics.MeanAbsoluteError()])
@@ -128,11 +128,11 @@ def train_and_evaluate_physics_model(df, target_column, simple=False):
     X_train, X_test, y_train, y_test = train_test_split(X, y_with_features, test_size=0.2, random_state=42)
 
     model = Sequential()
-    model.add(Dense(256, input_dim=X_train.shape[1], activation='relu'))
-    model.add(Dense(256, activation='relu'))
+    model.add(Dense(227, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(227, activation='relu'))
     model.add(Dense(1, activation='linear'))
 
-    model.compile(optimizer=Adam(), loss=pinn_loss, metrics=[pinn_loss])
+    model.compile(optimizer=Adam(learning_rate=0.0009323), loss=pinn_loss, metrics=[pinn_loss])
 
     # Callbacks
     lr_scheduler = ReduceLROnPlateau(factor=0.66, patience=5)
@@ -251,6 +251,7 @@ def process_existing_dataset(df, dataset_name):
     else:
         return df
 
+
 @st.cache_data
 def get_feature_importances(initial_df, heating_load_column='Water Heating Load (Btu)'):
     X = initial_df.drop(columns=[heating_load_column])
@@ -269,14 +270,23 @@ def get_most_similar_column(target, columns):
 
 
 def prompt_user_for_columns(df):
+    st.title('New Dataset Detected')
     st.subheader("Dataset Columns")
-    st.write("Please select the columns to keep and map the necessary columns for the analysis.")
+    st.markdown("""
+            Please select the columns to keep and map the necessary columns for the analysis. The kept columns must necessarily match 
+             at least the following columns in order to apply physics-informed machine learning for heating load:
+              - **water flow** => The amount of water entering the HPWH system.
+              - **outlet water temp** => The temperature of the water leaving the HPWH system.
+              - **inlet temp** => The temperature of the water entering the HPWH system.
+              - **timestamp** => The timestamp of the data. Should be in format 'YYYY-MM-DD HH:MM:SS'.
+              - **heating load** => The heating load of the HPWH system.
+              """)
 
-    columns_to_keep = st.multiselect("Select columns to keep", options=df.columns, default=df.columns.tolist())
+    columns_to_keep = st.multiselect("Select columns to keep (Minimum 5)", options=df.columns, default=df.columns.tolist())
 
-    if len(columns_to_keep) == 0:
-        st.error("Please select at least one column.")
-        return None, None, None, None, None, None
+    if len(columns_to_keep) < 5:
+        st.error("Please select at least 5 columns to proceed.")
+        return
 
     df = df[columns_to_keep]
 
@@ -348,3 +358,49 @@ def process_new_dataset(df, water_flow_column, outlet_water_temp_column, inlet_t
     df = df.resample('h').agg(agg_dict)
     df.dropna(inplace=True)
     return df
+
+
+def prompt_user_for_partial_columns(df):
+    st.title('New Dataset Detected')
+    st.write("Please select the columns for time stamp and for the heating load.")
+
+    # Find the most similar column names
+    columns = df.columns.tolist()
+
+    default_timestamp_column = get_most_similar_column("timestamp", columns)
+    default_heating_load_column = get_most_similar_column("heating load", columns)
+
+    submitted = False
+    with st.form("column_mapping_initial"):
+
+        timestamp_column = st.selectbox("Select the column for timestamp", options=columns,
+                                        index=columns.index(
+                                            default_timestamp_column) if default_timestamp_column else 0)
+        heating_load_column = st.selectbox("Select the column for heating load", options=columns,
+                                           index=columns.index(
+                                               default_heating_load_column) if default_heating_load_column else 0)
+        submitted = st.form_submit_button("Submit")
+
+    if submitted:
+        df_copy = df.copy()
+
+        df_copy[timestamp_column] = pd.to_datetime(df_copy[timestamp_column])
+        df_copy.set_index(timestamp_column, inplace=True)
+
+        for col in df_copy.columns:
+            df_copy[col] = pd.to_numeric(df_copy[col], errors='coerce')
+
+        # Drop columns that are entirely NaN
+        df_copy.dropna(axis=1, how='all', inplace=True)
+
+        # Reduce df_copy to a maximum of 50000 entries
+        if len(df_copy) > 50000:
+            df_copy = df_copy.iloc[:50000]
+            st.session_state['is_reduced_dataset'] = True
+        else:
+            st.session_state['is_reduced_dataset'] = False
+
+        st.session_state['filtered_df_initial'] = df_copy
+        st.session_state['timestamp_column'] = timestamp_column
+        st.session_state['heating_load_column'] = heating_load_column
+        st.rerun()

@@ -16,4 +16,16 @@ def show_documentation():
            - The PINN is designed with a custom loss function that includes terms representing the physical laws.
            - For example, the heat equation is used to relate the water flow and temperature differences to the heating load.
            - This ensures that the predictions made by the PINN are not only fitting the data but also adhering to the underlying physical principles.
-           """)
+           """
+                    )
+
+def show_documentation_initial():
+    st.title('Documentation')
+
+    st.subheader('Using the application')
+    st.markdown("""
+    This application is designed to help you explore and analyze a dataset related to a heat pump water heater (HPWH) system.
+    Statistics about the data can be viewed by using the sidebar navigation. Once you have got a good view on the data, 
+    you can move forward with processing the dataset
+    and training models to predict the water heating load of the HPWH system. This is done in the "Process Dataset" section.
+    """)
