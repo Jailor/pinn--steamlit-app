@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import time
 
+from common import get_distances
+
 
 def show_interactive_model_comparison_with_physics(standard_model, pinn_model):
     # Input parameters
@@ -112,7 +114,7 @@ def show_interactive_model_comparison_with_physics_generic(standard_model, pinn_
     st.plotly_chart(fig)
 
 
-def get_distances(standard_pred, pinn_pred, heat_output_physics):
+def get_distance(standard_pred, pinn_pred, heat_output_physics):
     d1 = abs(standard_pred[0][0] - heat_output_physics[0])
     d2 = abs(pinn_pred[0][0] - heat_output_physics[0])
     return d1, d2

@@ -38,12 +38,8 @@ def load_simplified_models():
     return standard_model, pinn_model
 
 
-def train_and_evaluate_model(df, target_column, simple=False):
-    # Prepare the data
+def train_and_evaluate_model(df, target_column):
     X = df.drop(columns=[target_column])
-    # if simple:
-    #     columns = st.session_state['columns']
-    #     X = df[columns['water_flow'])
 
     y = df[target_column]
 
@@ -56,7 +52,7 @@ def train_and_evaluate_model(df, target_column, simple=False):
     model.add(Dense(227, activation='relu'))
     model.add(Dense(1, activation='linear'))
 
-    model.compile(optimizer=Adam(learning_rate = 0.0009323), loss='mean_absolute_error',
+    model.compile(optimizer=Adam(learning_rate=0.0009323), loss='mean_absolute_error',
                   metrics=[
                       keras.metrics.RootMeanSquaredError(),
                       keras.metrics.MeanAbsoluteError()])
@@ -91,7 +87,7 @@ def train_and_evaluate_model(df, target_column, simple=False):
     return model
 
 
-def train_and_evaluate_physics_model(df, target_column, simple=False):
+def train_and_evaluate_physics_model(df, target_column):
     alpha = 0.089
 
     def pinn_loss(y_true_with_features, y_pred):
@@ -282,7 +278,8 @@ def prompt_user_for_columns(df):
               - **heating load** => The heating load of the HPWH system.
               """)
 
-    columns_to_keep = st.multiselect("Select columns to keep (Minimum 5)", options=df.columns, default=df.columns.tolist())
+    columns_to_keep = st.multiselect("Select columns to keep (Minimum 5)", options=df.columns,
+                                     default=df.columns.tolist())
 
     if len(columns_to_keep) < 5:
         st.error("Please select at least 5 columns to proceed.")
@@ -404,3 +401,12 @@ def prompt_user_for_partial_columns(df):
         st.session_state['timestamp_column'] = timestamp_column
         st.session_state['heating_load_column'] = heating_load_column
         st.rerun()
+
+
+def get_distances(standard_pred, pinn_pred, heat_output_physics):
+    d1 = abs(standard_pred[0][0] - heat_output_physics[0])
+    d2 = abs(pinn_pred[0][0] - heat_output_physics[0])
+    if d2 > d1:
+        d1, d2 = d2, d1
+        standard_pred[0][0], pinn_pred[0][0] = pinn_pred[0][0], standard_pred[0][0]
+    return d1, d2

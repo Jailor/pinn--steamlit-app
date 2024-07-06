@@ -102,7 +102,7 @@ def show_data_exploration_statistics(initial_df, feature_importance_df):
     st.plotly_chart(fig_missing)
 
 
-def show_data_exploration_time_series_analysis_generic(initial_df, short=False):
+def show_data_exploration_time_series_analysis_generic(initial_df):
     columns = initial_df.columns
     with st.expander('Time Series Analysis (Weekly Aggregated)', expanded=True):
         initial_df_resampled = initial_df.resample('W').mean()
@@ -134,23 +134,23 @@ def show_data_exploration_time_series_analysis_generic(initial_df, short=False):
             )
             st.plotly_chart(fig_ts)
 
-    if not short:
-        with st.expander('Time Series Analysis (Smoothed with Moving Average)', expanded=False):
-            # Add a slider for the moving average window size
-            window_size = st.slider('Select Moving Average Window Size', min_value=1, max_value=60, value=21, step=1)
 
-            initial_df_ma = initial_df.copy()
-            for col in columns:
-                initial_df_ma[f'{col}_MA'] = initial_df_ma[col].rolling(window=window_size).mean()
-                fig_ts = px.line(initial_df_ma, x=initial_df_ma.index, y=f'{col}_MA',
-                                 title=f'Moving Average Time Series of {col}')
-                fig_ts.update_layout(
-                    xaxis_title='Time',
-                    yaxis_title=col,
-                    title=f'Moving Average Time Series of {col} (Window Size: {window_size})',
-                    yaxis=dict(tickformat=".2f")
-                )
-                st.plotly_chart(fig_ts)
+    with st.expander('Time Series Analysis (Smoothed with Moving Average)', expanded=False):
+        # Add a slider for the moving average window size
+        window_size = st.slider('Select Moving Average Window Size', min_value=1, max_value=60, value=21, step=1)
+
+        initial_df_ma = initial_df.copy()
+        for col in columns:
+            initial_df_ma[f'{col}_MA'] = initial_df_ma[col].rolling(window=window_size).mean()
+            fig_ts = px.line(initial_df_ma, x=initial_df_ma.index, y=f'{col}_MA',
+                             title=f'Moving Average Time Series of {col}')
+            fig_ts.update_layout(
+                xaxis_title='Time',
+                yaxis_title=col,
+                title=f'Moving Average Time Series of {col} (Window Size: {window_size})',
+                yaxis=dict(tickformat=".2f")
+            )
+            st.plotly_chart(fig_ts)
 
 
 def show_data_exploration_statistics_generic(initial_df, feature_importance_df=None):
