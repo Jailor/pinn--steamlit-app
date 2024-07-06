@@ -6,3 +6,5 @@ my_pages/__pycache__*
 *.pyc
 logs/
 *.log
+best_classic_trained.keras
+best_physics_trained.keras
