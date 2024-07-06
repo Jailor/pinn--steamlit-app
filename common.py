@@ -15,6 +15,8 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
 from sklearn.model_selection import train_test_split, KFold, cross_validate
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import numpy as np
+
+
 def pinn_loss(y_true_with_features, y_pred):
     pass
 
@@ -42,7 +44,6 @@ def train_and_evaluate_model(df, target_column, simple=False):
     # if simple:
     #     columns = st.session_state['columns']
     #     X = df[columns['water_flow'])
-
 
     y = df[target_column]
 
@@ -89,9 +90,10 @@ def train_and_evaluate_model(df, target_column, simple=False):
 
     return model
 
-def train_and_evaluate_physics_model(df, target_column, simple=False):
 
+def train_and_evaluate_physics_model(df, target_column, simple=False):
     alpha = 0.089
+
     def pinn_loss(y_true_with_features, y_pred):
         y_true = y_true_with_features[:, 0:1]
         outlet_water_temp = y_true_with_features[:, 1:2]
@@ -107,6 +109,7 @@ def train_and_evaluate_physics_model(df, target_column, simple=False):
         outlet_temp_c = fahrenheit_to_celsius(outlet_water_temp)
         heat_output = water_flow * (outlet_water_temp - inlet_temp) * 0.997 * 8.3077
         return tf.reduce_mean(tf.abs(y_true - y_pred) + alpha * tf.abs(heat_output - y_pred), axis=-1)
+
     # Prepare the data
 
     X = df.drop(columns=[target_column])
@@ -159,10 +162,30 @@ def train_and_evaluate_physics_model(df, target_column, simple=False):
     return model
 
 
-@st.cache_resource
-def load_data_rossland_site1():
+def reset_state_and_prompt():
+    st.session_state.pop('uploaded_file', None)
+    st.session_state.pop('initial_df', None)
+    st.session_state['error_message'] = "This dataset is not valid. Please upload a valid CSV file."
+    st.rerun()
+
+
+def load_existing_datasets():
+    if 'datasets' in st.session_state:
+        return
+    rossland_original = load_dataset('rossland_original')
+    # rossland_renamed_df = load_dataset('rossland_renamed')
+    # cleaned_v1_e350 = load_dataset('cleaned_v1_e350')
+    st.session_state['rossland_df'] = rossland_original
+    st.session_state['datasets'] = {
+        'Rossland Site 1 E350': rossland_original,
+        # 'Rossland Site 1 renamed E350': rossland_renamed_df,
+        # 'Victoria Island 1 E350': cleaned_v1_e350
+    }
+
+
+def load_dataset(dataset_name):
     try:
-        df = pd.read_csv('Rossland Site 1.csv', sep=';', low_memory=False)
+        df = pd.read_csv(f'datasets/{dataset_name}.csv', low_memory=False)
         return df
     except Exception as e:
         print(f"An error occurred while reading Rossland: {e}")
@@ -190,12 +213,12 @@ def load_data(uploaded_file):
         print(f"An error occurred while reading the file: {e}")
         return None
 
-    rossland_df = load_data_rossland_site1()
+    return df
 
-    if not df.equals(rossland_df):
-        return df, df
-    else:
-        raw_df = df.copy()
+
+def process_existing_dataset(df, dataset_name):
+    if dataset_name == 'Rossland Site 1 E350':
+        # Directly process the Rossland site 1 data according to predefined rules
         # Drop bad data
         df.drop('ID', axis=1, inplace=True)
         df.drop('Uncorrected Water Flow (Gallons)', axis=1, inplace=True)
@@ -224,11 +247,12 @@ def load_data(uploaded_file):
             'Water Heating Load (Btu)': 'sum'
         })
         df.dropna(inplace=True)
-        return df, raw_df
-
+        return df
+    else:
+        return df
 
 @st.cache_data
-def get_feature_importances(initial_df, heating_load_column = 'Water Heating Load (Btu)'):
+def get_feature_importances(initial_df, heating_load_column='Water Heating Load (Btu)'):
     X = initial_df.drop(columns=[heating_load_column])
     y = initial_df[heating_load_column]
     model = RandomForestRegressor()
@@ -263,12 +287,23 @@ def prompt_user_for_columns(df):
     default_timestamp_column = get_most_similar_column("timestamp", columns_to_keep)
     default_heating_load_column = get_most_similar_column("heating load", columns_to_keep)
 
+    submitted = False
     with st.form("column_mapping"):
-        water_flow_column = st.selectbox("Select the column for water flow", options=columns_to_keep, index=columns_to_keep.index(default_water_flow_column) if default_water_flow_column else 0)
-        outlet_water_temp_column = st.selectbox("Select the column for outlet water temperature", options=columns_to_keep, index=columns_to_keep.index(default_outlet_water_temp_column) if default_outlet_water_temp_column else 0)
-        inlet_temp_column = st.selectbox("Select the column for inlet temperature", options=columns_to_keep, index=columns_to_keep.index(default_inlet_temp_column) if default_inlet_temp_column else 0)
-        timestamp_column = st.selectbox("Select the column for timestamp", options=columns_to_keep, index=columns_to_keep.index(default_timestamp_column) if default_timestamp_column else 0)
-        heating_load_column = st.selectbox("Select the column for heating load", options=columns_to_keep, index=columns_to_keep.index(default_heating_load_column) if default_heating_load_column else 0)
+        water_flow_column = st.selectbox("Select the column for water flow", options=columns_to_keep,
+                                         index=columns_to_keep.index(
+                                             default_water_flow_column) if default_water_flow_column else 0)
+        outlet_water_temp_column = st.selectbox("Select the column for outlet water temperature",
+                                                options=columns_to_keep, index=columns_to_keep.index(
+                default_outlet_water_temp_column) if default_outlet_water_temp_column else 0)
+        inlet_temp_column = st.selectbox("Select the column for inlet temperature", options=columns_to_keep,
+                                         index=columns_to_keep.index(
+                                             default_inlet_temp_column) if default_inlet_temp_column else 0)
+        timestamp_column = st.selectbox("Select the column for timestamp", options=columns_to_keep,
+                                        index=columns_to_keep.index(
+                                            default_timestamp_column) if default_timestamp_column else 0)
+        heating_load_column = st.selectbox("Select the column for heating load", options=columns_to_keep,
+                                           index=columns_to_keep.index(
+                                               default_heating_load_column) if default_heating_load_column else 0)
         submitted = st.form_submit_button("Submit")
 
     if submitted:
@@ -285,7 +320,8 @@ def prompt_user_for_columns(df):
 
 
 @st.cache_data
-def process_new_dataset(df, water_flow_column, outlet_water_temp_column, inlet_temp_column, timestamp_column, heating_load_column):
+def process_new_dataset(df, water_flow_column, outlet_water_temp_column, inlet_temp_column, timestamp_column,
+                        heating_load_column):
     df[timestamp_column] = pd.to_datetime(df[timestamp_column])
     df.set_index(timestamp_column, inplace=True)
 
