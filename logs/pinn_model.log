@@ -1821,3 +1821,601 @@ loss: 290.3829 - pinn_loss: 290.3829 - val_loss: 330.2417 - val_pinn_loss: 330.2
 
 Epoch 100/100
 loss: 292.3087 - pinn_loss: 292.3087 - val_loss: 330.5628 - val_pinn_loss: 330.5628 - learning_rate: 0.0001
+Epoch 1/100
+loss: 816.7227 - pinn_loss: 816.7227 - val_loss: 863.4603 - val_pinn_loss: 863.4603 - learning_rate: 0.0009
+
+Epoch 2/100
+loss: 806.1482 - pinn_loss: 806.1482 - val_loss: 863.0315 - val_pinn_loss: 863.0315 - learning_rate: 0.0009
+
+Epoch 3/100
+loss: 806.1720 - pinn_loss: 806.1720 - val_loss: 856.5344 - val_pinn_loss: 856.5344 - learning_rate: 0.0009
+
+Epoch 4/100
+loss: 803.4769 - pinn_loss: 803.4769 - val_loss: 856.6506 - val_pinn_loss: 856.6506 - learning_rate: 0.0009
+
+Epoch 5/100
+loss: 804.9234 - pinn_loss: 804.9234 - val_loss: 856.3288 - val_pinn_loss: 856.3288 - learning_rate: 0.0009
+
+Epoch 6/100
+loss: 802.7236 - pinn_loss: 802.7236 - val_loss: 863.9205 - val_pinn_loss: 863.9205 - learning_rate: 0.0009
+
+Epoch 7/100
+loss: 799.8500 - pinn_loss: 799.8500 - val_loss: 851.6111 - val_pinn_loss: 851.6111 - learning_rate: 0.0009
+
+Epoch 8/100
+loss: 798.0146 - pinn_loss: 798.0146 - val_loss: 843.7684 - val_pinn_loss: 843.7684 - learning_rate: 0.0009
+
+Epoch 9/100
+loss: 789.6116 - pinn_loss: 789.6116 - val_loss: 834.6198 - val_pinn_loss: 834.6198 - learning_rate: 0.0009
+
+Epoch 10/100
+loss: 784.2533 - pinn_loss: 784.2533 - val_loss: 825.9232 - val_pinn_loss: 825.9232 - learning_rate: 0.0009
+
+Epoch 11/100
+loss: 774.6142 - pinn_loss: 774.6142 - val_loss: 811.8427 - val_pinn_loss: 811.8427 - learning_rate: 0.0009
+
+Epoch 12/100
+loss: 771.8965 - pinn_loss: 771.8965 - val_loss: 795.9911 - val_pinn_loss: 795.9911 - learning_rate: 0.0009
+
+Epoch 13/100
+loss: 747.4311 - pinn_loss: 747.4311 - val_loss: 768.5826 - val_pinn_loss: 768.5826 - learning_rate: 0.0009
+
+Epoch 14/100
+loss: 720.3580 - pinn_loss: 720.3580 - val_loss: 735.5331 - val_pinn_loss: 735.5331 - learning_rate: 0.0009
+
+Epoch 15/100
+loss: 697.8014 - pinn_loss: 697.8014 - val_loss: 718.0124 - val_pinn_loss: 718.0124 - learning_rate: 0.0009
+
+Epoch 16/100
+loss: 652.8773 - pinn_loss: 652.8773 - val_loss: 683.2958 - val_pinn_loss: 683.2958 - learning_rate: 0.0009
+
+Epoch 17/100
+loss: 608.9421 - pinn_loss: 608.9421 - val_loss: 613.5787 - val_pinn_loss: 613.5787 - learning_rate: 0.0009
+
+Epoch 18/100
+loss: 557.9661 - pinn_loss: 557.9661 - val_loss: 579.6021 - val_pinn_loss: 579.6021 - learning_rate: 0.0009
+
+Epoch 19/100
+loss: 511.7738 - pinn_loss: 511.7738 - val_loss: 509.3349 - val_pinn_loss: 509.3349 - learning_rate: 0.0009
+
+Epoch 20/100
+loss: 475.4533 - pinn_loss: 475.4533 - val_loss: 510.2539 - val_pinn_loss: 510.2539 - learning_rate: 0.0009
+
+Epoch 21/100
+loss: 432.0630 - pinn_loss: 432.0630 - val_loss: 428.6345 - val_pinn_loss: 428.6345 - learning_rate: 0.0009
+
+Epoch 22/100
+loss: 399.2118 - pinn_loss: 399.2118 - val_loss: 474.5961 - val_pinn_loss: 474.5961 - learning_rate: 0.0009
+
+Epoch 23/100
+loss: 413.0669 - pinn_loss: 413.0669 - val_loss: 438.6406 - val_pinn_loss: 438.6406 - learning_rate: 0.0009
+
+Epoch 24/100
+loss: 374.3593 - pinn_loss: 374.3593 - val_loss: 394.8428 - val_pinn_loss: 394.8428 - learning_rate: 0.0009
+
+Epoch 25/100
+loss: 362.6825 - pinn_loss: 362.6825 - val_loss: 381.1955 - val_pinn_loss: 381.1955 - learning_rate: 0.0009
+
+Epoch 26/100
+loss: 342.8038 - pinn_loss: 342.8038 - val_loss: 383.7147 - val_pinn_loss: 383.7147 - learning_rate: 0.0009
+
+Epoch 27/100
+loss: 372.3790 - pinn_loss: 372.3790 - val_loss: 473.1689 - val_pinn_loss: 473.1689 - learning_rate: 0.0009
+
+Epoch 28/100
+loss: 463.9041 - pinn_loss: 463.9041 - val_loss: 412.8272 - val_pinn_loss: 412.8272 - learning_rate: 0.0009
+
+Epoch 29/100
+loss: 363.1441 - pinn_loss: 363.1441 - val_loss: 379.0196 - val_pinn_loss: 379.0196 - learning_rate: 0.0009
+
+Epoch 30/100
+loss: 353.2801 - pinn_loss: 353.2801 - val_loss: 388.1584 - val_pinn_loss: 388.1584 - learning_rate: 0.0009
+
+Epoch 31/100
+loss: 342.4864 - pinn_loss: 342.4864 - val_loss: 377.8809 - val_pinn_loss: 377.8809 - learning_rate: 0.0009
+
+Epoch 32/100
+loss: 326.7929 - pinn_loss: 326.7929 - val_loss: 394.0735 - val_pinn_loss: 394.0735 - learning_rate: 0.0009
+
+Epoch 33/100
+loss: 335.5617 - pinn_loss: 335.5617 - val_loss: 450.6141 - val_pinn_loss: 450.6141 - learning_rate: 0.0009
+
+Epoch 34/100
+loss: 471.7967 - pinn_loss: 471.7967 - val_loss: 437.8657 - val_pinn_loss: 437.8657 - learning_rate: 0.0009
+
+Epoch 35/100
+loss: 363.2211 - pinn_loss: 363.2211 - val_loss: 387.7655 - val_pinn_loss: 387.7655 - learning_rate: 0.0009
+
+Epoch 36/100
+loss: 344.1605 - pinn_loss: 344.1605 - val_loss: 386.8228 - val_pinn_loss: 386.8228 - learning_rate: 0.0009
+
+Epoch 37/100
+loss: 330.4162 - pinn_loss: 330.4162 - val_loss: 363.1556 - val_pinn_loss: 363.1556 - learning_rate: 0.0006
+
+Epoch 38/100
+loss: 312.3507 - pinn_loss: 312.3507 - val_loss: 357.7682 - val_pinn_loss: 357.7682 - learning_rate: 0.0006
+
+Epoch 39/100
+loss: 314.4273 - pinn_loss: 314.4273 - val_loss: 372.1432 - val_pinn_loss: 372.1432 - learning_rate: 0.0006
+
+Epoch 40/100
+loss: 315.2293 - pinn_loss: 315.2293 - val_loss: 351.9668 - val_pinn_loss: 351.9668 - learning_rate: 0.0006
+
+Epoch 41/100
+loss: 307.1053 - pinn_loss: 307.1053 - val_loss: 350.5221 - val_pinn_loss: 350.5221 - learning_rate: 0.0006
+
+Epoch 42/100
+loss: 307.1339 - pinn_loss: 307.1339 - val_loss: 353.2693 - val_pinn_loss: 353.2693 - learning_rate: 0.0006
+
+Epoch 43/100
+loss: 308.2808 - pinn_loss: 308.2808 - val_loss: 346.9606 - val_pinn_loss: 346.9606 - learning_rate: 0.0006
+
+Epoch 44/100
+loss: 307.8173 - pinn_loss: 307.8173 - val_loss: 356.1903 - val_pinn_loss: 356.1903 - learning_rate: 0.0006
+
+Epoch 45/100
+loss: 307.8311 - pinn_loss: 307.8311 - val_loss: 351.5792 - val_pinn_loss: 351.5792 - learning_rate: 0.0006
+
+Epoch 46/100
+loss: 301.9152 - pinn_loss: 301.9152 - val_loss: 341.6023 - val_pinn_loss: 341.6023 - learning_rate: 0.0006
+
+Epoch 47/100
+loss: 301.9242 - pinn_loss: 301.9242 - val_loss: 344.0160 - val_pinn_loss: 344.0160 - learning_rate: 0.0006
+
+Epoch 48/100
+loss: 299.7453 - pinn_loss: 299.7453 - val_loss: 337.0714 - val_pinn_loss: 337.0714 - learning_rate: 0.0006
+
+Epoch 49/100
+loss: 302.5250 - pinn_loss: 302.5250 - val_loss: 352.8082 - val_pinn_loss: 352.8082 - learning_rate: 0.0006
+
+Epoch 50/100
+loss: 307.5547 - pinn_loss: 307.5547 - val_loss: 339.7210 - val_pinn_loss: 339.7210 - learning_rate: 0.0006
+
+Epoch 51/100
+loss: 299.1279 - pinn_loss: 299.1279 - val_loss: 336.9380 - val_pinn_loss: 336.9380 - learning_rate: 0.0006
+
+Epoch 52/100
+loss: 295.3588 - pinn_loss: 295.3588 - val_loss: 345.2742 - val_pinn_loss: 345.2742 - learning_rate: 0.0006
+
+Epoch 53/100
+loss: 317.8943 - pinn_loss: 317.8943 - val_loss: 343.8910 - val_pinn_loss: 343.8910 - learning_rate: 0.0006
+
+Epoch 54/100
+loss: 299.8047 - pinn_loss: 299.8047 - val_loss: 339.7006 - val_pinn_loss: 339.7006 - learning_rate: 0.0006
+
+Epoch 55/100
+loss: 311.0876 - pinn_loss: 311.0876 - val_loss: 367.3649 - val_pinn_loss: 367.3649 - learning_rate: 0.0006
+
+Epoch 56/100
+loss: 301.1944 - pinn_loss: 301.1944 - val_loss: 334.7859 - val_pinn_loss: 334.7859 - learning_rate: 0.0006
+
+Epoch 57/100
+loss: 289.4454 - pinn_loss: 289.4454 - val_loss: 334.3673 - val_pinn_loss: 334.3673 - learning_rate: 0.0006
+
+Epoch 58/100
+loss: 296.4999 - pinn_loss: 296.4999 - val_loss: 348.2142 - val_pinn_loss: 348.2142 - learning_rate: 0.0006
+
+Epoch 59/100
+loss: 302.6794 - pinn_loss: 302.6794 - val_loss: 348.2513 - val_pinn_loss: 348.2513 - learning_rate: 0.0006
+
+Epoch 60/100
+loss: 295.7607 - pinn_loss: 295.7607 - val_loss: 354.2383 - val_pinn_loss: 354.2383 - learning_rate: 0.0006
+
+Epoch 61/100
+loss: 296.4137 - pinn_loss: 296.4137 - val_loss: 325.6918 - val_pinn_loss: 325.6918 - learning_rate: 0.0006
+
+Epoch 62/100
+loss: 288.6027 - pinn_loss: 288.6027 - val_loss: 334.8589 - val_pinn_loss: 334.8589 - learning_rate: 0.0006
+
+Epoch 63/100
+loss: 291.6261 - pinn_loss: 291.6261 - val_loss: 346.4389 - val_pinn_loss: 346.4389 - learning_rate: 0.0006
+
+Epoch 64/100
+loss: 288.0589 - pinn_loss: 288.0589 - val_loss: 324.5143 - val_pinn_loss: 324.5143 - learning_rate: 0.0006
+
+Epoch 65/100
+loss: 288.0179 - pinn_loss: 288.0179 - val_loss: 328.7751 - val_pinn_loss: 328.7751 - learning_rate: 0.0006
+
+Epoch 66/100
+loss: 289.9232 - pinn_loss: 289.9232 - val_loss: 331.5079 - val_pinn_loss: 331.5079 - learning_rate: 0.0006
+
+Epoch 67/100
+loss: 285.5617 - pinn_loss: 285.5617 - val_loss: 323.6035 - val_pinn_loss: 323.6035 - learning_rate: 0.0006
+
+Epoch 68/100
+loss: 293.6735 - pinn_loss: 293.6735 - val_loss: 345.2339 - val_pinn_loss: 345.2339 - learning_rate: 0.0006
+
+Epoch 69/100
+loss: 300.4427 - pinn_loss: 300.4427 - val_loss: 324.5328 - val_pinn_loss: 324.5328 - learning_rate: 0.0006
+
+Epoch 70/100
+loss: 284.9886 - pinn_loss: 284.9886 - val_loss: 324.7068 - val_pinn_loss: 324.7068 - learning_rate: 0.0006
+
+Epoch 71/100
+loss: 287.7356 - pinn_loss: 287.7356 - val_loss: 319.8828 - val_pinn_loss: 319.8828 - learning_rate: 0.0006
+
+Epoch 72/100
+loss: 284.9191 - pinn_loss: 284.9191 - val_loss: 323.2175 - val_pinn_loss: 323.2175 - learning_rate: 0.0006
+
+Epoch 73/100
+loss: 291.0799 - pinn_loss: 291.0799 - val_loss: 317.8721 - val_pinn_loss: 317.8721 - learning_rate: 0.0006
+
+Epoch 74/100
+loss: 289.6779 - pinn_loss: 289.6779 - val_loss: 330.2200 - val_pinn_loss: 330.2200 - learning_rate: 0.0006
+
+Epoch 75/100
+loss: 303.8919 - pinn_loss: 303.8919 - val_loss: 339.8096 - val_pinn_loss: 339.8096 - learning_rate: 0.0006
+
+Epoch 76/100
+loss: 290.8474 - pinn_loss: 290.8474 - val_loss: 333.7772 - val_pinn_loss: 333.7772 - learning_rate: 0.0006
+
+Epoch 77/100
+loss: 285.0786 - pinn_loss: 285.0786 - val_loss: 330.3654 - val_pinn_loss: 330.3654 - learning_rate: 0.0006
+
+Epoch 78/100
+loss: 296.6577 - pinn_loss: 296.6577 - val_loss: 351.3037 - val_pinn_loss: 351.3037 - learning_rate: 0.0006
+
+Epoch 79/100
+loss: 302.4882 - pinn_loss: 302.4882 - val_loss: 323.4999 - val_pinn_loss: 323.4999 - learning_rate: 0.0004
+
+Epoch 80/100
+loss: 284.3809 - pinn_loss: 284.3809 - val_loss: 324.4438 - val_pinn_loss: 324.4438 - learning_rate: 0.0004
+
+Epoch 81/100
+loss: 282.4703 - pinn_loss: 282.4703 - val_loss: 315.6580 - val_pinn_loss: 315.6580 - learning_rate: 0.0004
+
+Epoch 82/100
+loss: 281.6300 - pinn_loss: 281.6300 - val_loss: 318.7427 - val_pinn_loss: 318.7427 - learning_rate: 0.0004
+
+Epoch 83/100
+loss: 278.0157 - pinn_loss: 278.0157 - val_loss: 318.6787 - val_pinn_loss: 318.6787 - learning_rate: 0.0004
+
+Epoch 84/100
+loss: 283.8333 - pinn_loss: 283.8333 - val_loss: 326.3417 - val_pinn_loss: 326.3417 - learning_rate: 0.0004
+
+Epoch 85/100
+loss: 280.4525 - pinn_loss: 280.4525 - val_loss: 315.5067 - val_pinn_loss: 315.5067 - learning_rate: 0.0004
+
+Epoch 86/100
+loss: 278.8441 - pinn_loss: 278.8441 - val_loss: 322.0237 - val_pinn_loss: 322.0237 - learning_rate: 0.0004
+
+Epoch 87/100
+loss: 280.3376 - pinn_loss: 280.3376 - val_loss: 316.6040 - val_pinn_loss: 316.6040 - learning_rate: 0.0004
+
+Epoch 88/100
+loss: 280.7094 - pinn_loss: 280.7094 - val_loss: 311.3262 - val_pinn_loss: 311.3262 - learning_rate: 0.0004
+
+Epoch 89/100
+loss: 276.2672 - pinn_loss: 276.2672 - val_loss: 333.2305 - val_pinn_loss: 333.2305 - learning_rate: 0.0004
+
+Epoch 90/100
+loss: 297.7586 - pinn_loss: 297.7586 - val_loss: 317.8497 - val_pinn_loss: 317.8497 - learning_rate: 0.0004
+
+Epoch 91/100
+loss: 282.6348 - pinn_loss: 282.6348 - val_loss: 319.5526 - val_pinn_loss: 319.5526 - learning_rate: 0.0004
+
+Epoch 92/100
+loss: 282.2570 - pinn_loss: 282.2570 - val_loss: 317.4031 - val_pinn_loss: 317.4031 - learning_rate: 0.0004
+
+Epoch 93/100
+loss: 279.2057 - pinn_loss: 279.2057 - val_loss: 312.2495 - val_pinn_loss: 312.2495 - learning_rate: 0.0004
+
+Epoch 94/100
+loss: 275.1843 - pinn_loss: 275.1843 - val_loss: 314.9476 - val_pinn_loss: 314.9476 - learning_rate: 0.0003
+
+Epoch 95/100
+loss: 276.8912 - pinn_loss: 276.8912 - val_loss: 314.0127 - val_pinn_loss: 314.0127 - learning_rate: 0.0003
+
+Epoch 96/100
+loss: 277.3087 - pinn_loss: 277.3087 - val_loss: 313.6327 - val_pinn_loss: 313.6327 - learning_rate: 0.0003
+
+Epoch 97/100
+loss: 277.8096 - pinn_loss: 277.8096 - val_loss: 312.6602 - val_pinn_loss: 312.6602 - learning_rate: 0.0003
+
+Epoch 98/100
+loss: 276.4449 - pinn_loss: 276.4449 - val_loss: 313.2069 - val_pinn_loss: 313.2069 - learning_rate: 0.0003
+
+Epoch 99/100
+loss: 273.4415 - pinn_loss: 273.4415 - val_loss: 309.6792 - val_pinn_loss: 309.6792 - learning_rate: 0.0002
+
+Epoch 100/100
+loss: 274.6208 - pinn_loss: 274.6208 - val_loss: 313.3264 - val_pinn_loss: 313.3264 - learning_rate: 0.0002
+Epoch 1/100
+loss: 812.2695 - pinn_loss: 812.2695 - val_loss: 862.5840 - val_pinn_loss: 862.5840 - learning_rate: 0.0009
+
+Epoch 2/100
+loss: 806.7350 - pinn_loss: 806.7350 - val_loss: 863.0046 - val_pinn_loss: 863.0046 - learning_rate: 0.0009
+
+Epoch 3/100
+loss: 805.9910 - pinn_loss: 805.9910 - val_loss: 857.3494 - val_pinn_loss: 857.3494 - learning_rate: 0.0009
+
+Epoch 4/100
+loss: 802.2786 - pinn_loss: 802.2786 - val_loss: 853.7975 - val_pinn_loss: 853.7975 - learning_rate: 0.0009
+
+Epoch 5/100
+loss: 802.9104 - pinn_loss: 802.9104 - val_loss: 851.8901 - val_pinn_loss: 851.8901 - learning_rate: 0.0009
+
+Epoch 6/100
+loss: 802.4319 - pinn_loss: 802.4319 - val_loss: 855.1260 - val_pinn_loss: 855.1260 - learning_rate: 0.0009
+
+Epoch 7/100
+loss: 798.9927 - pinn_loss: 798.9927 - val_loss: 850.3231 - val_pinn_loss: 850.3231 - learning_rate: 0.0009
+
+Epoch 8/100
+loss: 795.0527 - pinn_loss: 795.0527 - val_loss: 842.5874 - val_pinn_loss: 842.5874 - learning_rate: 0.0009
+
+Epoch 9/100
+loss: 790.2206 - pinn_loss: 790.2206 - val_loss: 838.9226 - val_pinn_loss: 838.9226 - learning_rate: 0.0009
+
+Epoch 10/100
+loss: 782.7657 - pinn_loss: 782.7657 - val_loss: 825.6599 - val_pinn_loss: 825.6599 - learning_rate: 0.0009
+
+Epoch 11/100
+loss: 777.2102 - pinn_loss: 777.2102 - val_loss: 824.3304 - val_pinn_loss: 824.3304 - learning_rate: 0.0009
+
+Epoch 12/100
+loss: 764.7521 - pinn_loss: 764.7521 - val_loss: 798.9483 - val_pinn_loss: 798.9483 - learning_rate: 0.0009
+
+Epoch 13/100
+loss: 752.0342 - pinn_loss: 752.0342 - val_loss: 775.0820 - val_pinn_loss: 775.0820 - learning_rate: 0.0009
+
+Epoch 14/100
+loss: 724.4323 - pinn_loss: 724.4323 - val_loss: 736.8272 - val_pinn_loss: 736.8272 - learning_rate: 0.0009
+
+Epoch 15/100
+loss: 686.8226 - pinn_loss: 686.8226 - val_loss: 694.3891 - val_pinn_loss: 694.3891 - learning_rate: 0.0009
+
+Epoch 16/100
+loss: 641.9676 - pinn_loss: 641.9676 - val_loss: 664.0719 - val_pinn_loss: 664.0719 - learning_rate: 0.0009
+
+Epoch 17/100
+loss: 604.1219 - pinn_loss: 604.1219 - val_loss: 611.0795 - val_pinn_loss: 611.0795 - learning_rate: 0.0009
+
+Epoch 18/100
+loss: 536.5997 - pinn_loss: 536.5997 - val_loss: 540.0477 - val_pinn_loss: 540.0477 - learning_rate: 0.0009
+
+Epoch 19/100
+loss: 488.7916 - pinn_loss: 488.7916 - val_loss: 464.0630 - val_pinn_loss: 464.0630 - learning_rate: 0.0009
+
+Epoch 20/100
+loss: 426.5542 - pinn_loss: 426.5542 - val_loss: 469.2149 - val_pinn_loss: 469.2149 - learning_rate: 0.0009
+
+Epoch 21/100
+loss: 401.1753 - pinn_loss: 401.1753 - val_loss: 465.1479 - val_pinn_loss: 465.1479 - learning_rate: 0.0009
+
+Epoch 22/100
+loss: 399.1757 - pinn_loss: 399.1757 - val_loss: 424.0289 - val_pinn_loss: 424.0289 - learning_rate: 0.0009
+
+Epoch 23/100
+loss: 400.5630 - pinn_loss: 400.5630 - val_loss: 493.4145 - val_pinn_loss: 493.4145 - learning_rate: 0.0009
+
+Epoch 24/100
+loss: 395.3342 - pinn_loss: 395.3342 - val_loss: 383.8426 - val_pinn_loss: 383.8426 - learning_rate: 0.0009
+
+Epoch 25/100
+loss: 343.2239 - pinn_loss: 343.2239 - val_loss: 392.4501 - val_pinn_loss: 392.4501 - learning_rate: 0.0009
+
+Epoch 26/100
+loss: 341.9477 - pinn_loss: 341.9477 - val_loss: 464.5453 - val_pinn_loss: 464.5453 - learning_rate: 0.0009
+
+Epoch 27/100
+loss: 388.4789 - pinn_loss: 388.4789 - val_loss: 431.6367 - val_pinn_loss: 431.6367 - learning_rate: 0.0009
+
+Epoch 28/100
+loss: 361.3872 - pinn_loss: 361.3872 - val_loss: 374.7972 - val_pinn_loss: 374.7972 - learning_rate: 0.0009
+
+Epoch 29/100
+loss: 337.6743 - pinn_loss: 337.6743 - val_loss: 382.8358 - val_pinn_loss: 382.8358 - learning_rate: 0.0009
+
+Epoch 30/100
+loss: 331.3300 - pinn_loss: 331.3300 - val_loss: 379.8331 - val_pinn_loss: 379.8331 - learning_rate: 0.0009
+
+Epoch 31/100
+loss: 331.8715 - pinn_loss: 331.8715 - val_loss: 382.8919 - val_pinn_loss: 382.8919 - learning_rate: 0.0009
+
+Epoch 32/100
+loss: 326.0658 - pinn_loss: 326.0658 - val_loss: 405.7611 - val_pinn_loss: 405.7611 - learning_rate: 0.0009
+
+Epoch 33/100
+loss: 329.2201 - pinn_loss: 329.2201 - val_loss: 359.7849 - val_pinn_loss: 359.7849 - learning_rate: 0.0009
+
+Epoch 34/100
+loss: 325.7016 - pinn_loss: 325.7016 - val_loss: 370.7474 - val_pinn_loss: 370.7474 - learning_rate: 0.0009
+
+Epoch 35/100
+loss: 345.4012 - pinn_loss: 345.4012 - val_loss: 506.2853 - val_pinn_loss: 506.2853 - learning_rate: 0.0009
+
+Epoch 36/100
+loss: 382.0641 - pinn_loss: 382.0641 - val_loss: 375.3986 - val_pinn_loss: 375.3986 - learning_rate: 0.0009
+
+Epoch 37/100
+loss: 318.7958 - pinn_loss: 318.7958 - val_loss: 366.7366 - val_pinn_loss: 366.7366 - learning_rate: 0.0009
+
+Epoch 38/100
+loss: 314.5603 - pinn_loss: 314.5603 - val_loss: 380.4287 - val_pinn_loss: 380.4287 - learning_rate: 0.0009
+
+Epoch 39/100
+loss: 308.2949 - pinn_loss: 308.2949 - val_loss: 365.4441 - val_pinn_loss: 365.4441 - learning_rate: 0.0006
+
+Epoch 40/100
+loss: 308.7669 - pinn_loss: 308.7669 - val_loss: 350.4869 - val_pinn_loss: 350.4869 - learning_rate: 0.0006
+
+Epoch 41/100
+loss: 305.7058 - pinn_loss: 305.7058 - val_loss: 351.5984 - val_pinn_loss: 351.5984 - learning_rate: 0.0006
+
+Epoch 42/100
+loss: 308.7114 - pinn_loss: 308.7114 - val_loss: 359.2636 - val_pinn_loss: 359.2636 - learning_rate: 0.0006
+
+Epoch 43/100
+loss: 317.7169 - pinn_loss: 317.7169 - val_loss: 378.1730 - val_pinn_loss: 378.1730 - learning_rate: 0.0006
+
+Epoch 44/100
+loss: 310.3780 - pinn_loss: 310.3780 - val_loss: 354.4842 - val_pinn_loss: 354.4842 - learning_rate: 0.0006
+
+Epoch 45/100
+loss: 302.7209 - pinn_loss: 302.7209 - val_loss: 370.0927 - val_pinn_loss: 370.0927 - learning_rate: 0.0006
+
+Epoch 46/100
+loss: 312.7332 - pinn_loss: 312.7332 - val_loss: 342.5926 - val_pinn_loss: 342.5926 - learning_rate: 0.0004
+
+Epoch 47/100
+loss: 300.2529 - pinn_loss: 300.2529 - val_loss: 353.9208 - val_pinn_loss: 353.9208 - learning_rate: 0.0004
+
+Epoch 48/100
+loss: 302.7549 - pinn_loss: 302.7549 - val_loss: 365.6837 - val_pinn_loss: 365.6837 - learning_rate: 0.0004
+
+Epoch 49/100
+loss: 304.6935 - pinn_loss: 304.6935 - val_loss: 349.3145 - val_pinn_loss: 349.3145 - learning_rate: 0.0004
+
+Epoch 50/100
+loss: 295.6218 - pinn_loss: 295.6218 - val_loss: 336.5916 - val_pinn_loss: 336.5916 - learning_rate: 0.0004
+
+Epoch 51/100
+loss: 301.1693 - pinn_loss: 301.1693 - val_loss: 361.0250 - val_pinn_loss: 361.0250 - learning_rate: 0.0004
+
+Epoch 52/100
+loss: 304.8619 - pinn_loss: 304.8619 - val_loss: 340.5814 - val_pinn_loss: 340.5814 - learning_rate: 0.0004
+
+Epoch 53/100
+loss: 295.0537 - pinn_loss: 295.0537 - val_loss: 345.0833 - val_pinn_loss: 345.0833 - learning_rate: 0.0004
+
+Epoch 54/100
+loss: 301.7680 - pinn_loss: 301.7680 - val_loss: 352.4794 - val_pinn_loss: 352.4794 - learning_rate: 0.0004
+
+Epoch 55/100
+loss: 301.8952 - pinn_loss: 301.8952 - val_loss: 347.0376 - val_pinn_loss: 347.0376 - learning_rate: 0.0004
+
+Epoch 56/100
+loss: 294.5444 - pinn_loss: 294.5444 - val_loss: 335.4669 - val_pinn_loss: 335.4669 - learning_rate: 0.0003
+
+Epoch 57/100
+loss: 291.8947 - pinn_loss: 291.8947 - val_loss: 364.1289 - val_pinn_loss: 364.1289 - learning_rate: 0.0003
+
+Epoch 58/100
+loss: 321.9982 - pinn_loss: 321.9982 - val_loss: 343.3006 - val_pinn_loss: 343.3006 - learning_rate: 0.0003
+
+Epoch 59/100
+loss: 297.5159 - pinn_loss: 297.5159 - val_loss: 335.4458 - val_pinn_loss: 335.4458 - learning_rate: 0.0003
+
+Epoch 60/100
+loss: 289.2696 - pinn_loss: 289.2696 - val_loss: 335.8062 - val_pinn_loss: 335.8062 - learning_rate: 0.0003
+
+Epoch 61/100
+loss: 290.3731 - pinn_loss: 290.3731 - val_loss: 332.5280 - val_pinn_loss: 332.5280 - learning_rate: 0.0003
+
+Epoch 62/100
+loss: 289.3759 - pinn_loss: 289.3759 - val_loss: 333.4890 - val_pinn_loss: 333.4890 - learning_rate: 0.0003
+
+Epoch 63/100
+loss: 292.1259 - pinn_loss: 292.1259 - val_loss: 333.2798 - val_pinn_loss: 333.2798 - learning_rate: 0.0003
+
+Epoch 64/100
+loss: 288.4836 - pinn_loss: 288.4836 - val_loss: 336.7281 - val_pinn_loss: 336.7281 - learning_rate: 0.0003
+
+Epoch 65/100
+loss: 290.3487 - pinn_loss: 290.3487 - val_loss: 332.1739 - val_pinn_loss: 332.1739 - learning_rate: 0.0003
+
+Epoch 66/100
+loss: 290.2852 - pinn_loss: 290.2852 - val_loss: 329.0136 - val_pinn_loss: 329.0136 - learning_rate: 0.0003
+
+Epoch 67/100
+loss: 287.3575 - pinn_loss: 287.3575 - val_loss: 330.6673 - val_pinn_loss: 330.6673 - learning_rate: 0.0003
+
+Epoch 68/100
+loss: 287.9066 - pinn_loss: 287.9066 - val_loss: 340.9997 - val_pinn_loss: 340.9997 - learning_rate: 0.0003
+
+Epoch 69/100
+loss: 291.3146 - pinn_loss: 291.3146 - val_loss: 335.6143 - val_pinn_loss: 335.6143 - learning_rate: 0.0003
+
+Epoch 70/100
+loss: 288.6745 - pinn_loss: 288.6745 - val_loss: 334.3356 - val_pinn_loss: 334.3356 - learning_rate: 0.0003
+
+Epoch 71/100
+loss: 287.8184 - pinn_loss: 287.8184 - val_loss: 328.7863 - val_pinn_loss: 328.7863 - learning_rate: 0.0003
+
+Epoch 72/100
+loss: 285.9140 - pinn_loss: 285.9140 - val_loss: 326.8121 - val_pinn_loss: 326.8121 - learning_rate: 0.0003
+
+Epoch 73/100
+loss: 289.0898 - pinn_loss: 289.0898 - val_loss: 331.8726 - val_pinn_loss: 331.8726 - learning_rate: 0.0003
+
+Epoch 74/100
+loss: 288.7477 - pinn_loss: 288.7477 - val_loss: 356.3340 - val_pinn_loss: 356.3340 - learning_rate: 0.0003
+
+Epoch 75/100
+loss: 315.7096 - pinn_loss: 315.7096 - val_loss: 342.9726 - val_pinn_loss: 342.9726 - learning_rate: 0.0003
+
+Epoch 76/100
+loss: 288.8079 - pinn_loss: 288.8079 - val_loss: 329.2627 - val_pinn_loss: 329.2627 - learning_rate: 0.0003
+
+Epoch 77/100
+loss: 285.6955 - pinn_loss: 285.6955 - val_loss: 331.1638 - val_pinn_loss: 331.1638 - learning_rate: 0.0003
+
+Epoch 78/100
+loss: 286.4839 - pinn_loss: 286.4839 - val_loss: 337.2014 - val_pinn_loss: 337.2014 - learning_rate: 0.0002
+
+Epoch 79/100
+loss: 295.4200 - pinn_loss: 295.4200 - val_loss: 329.4881 - val_pinn_loss: 329.4881 - learning_rate: 0.0002
+
+Epoch 80/100
+loss: 283.8672 - pinn_loss: 283.8672 - val_loss: 328.8950 - val_pinn_loss: 328.8950 - learning_rate: 0.0002
+
+Epoch 81/100
+loss: 287.2993 - pinn_loss: 287.2993 - val_loss: 324.8797 - val_pinn_loss: 324.8797 - learning_rate: 0.0002
+
+Epoch 82/100
+loss: 284.5143 - pinn_loss: 284.5143 - val_loss: 324.5056 - val_pinn_loss: 324.5056 - learning_rate: 0.0002
+
+Epoch 83/100
+loss: 282.7356 - pinn_loss: 282.7356 - val_loss: 328.3700 - val_pinn_loss: 328.3700 - learning_rate: 0.0002
+
+Epoch 84/100
+loss: 285.6903 - pinn_loss: 285.6903 - val_loss: 325.4980 - val_pinn_loss: 325.4980 - learning_rate: 0.0002
+
+Epoch 85/100
+loss: 282.2440 - pinn_loss: 282.2440 - val_loss: 326.0163 - val_pinn_loss: 326.0163 - learning_rate: 0.0002
+
+Epoch 86/100
+loss: 283.6322 - pinn_loss: 283.6322 - val_loss: 327.2242 - val_pinn_loss: 327.2242 - learning_rate: 0.0002
+
+Epoch 87/100
+loss: 282.7413 - pinn_loss: 282.7413 - val_loss: 326.0028 - val_pinn_loss: 326.0028 - learning_rate: 0.0002
+
+Epoch 88/100
+loss: 282.4132 - pinn_loss: 282.4132 - val_loss: 323.8562 - val_pinn_loss: 323.8562 - learning_rate: 0.0001
+
+Epoch 89/100
+loss: 283.8100 - pinn_loss: 283.8100 - val_loss: 327.5953 - val_pinn_loss: 327.5953 - learning_rate: 0.0001
+
+Epoch 90/100
+loss: 283.5918 - pinn_loss: 283.5918 - val_loss: 326.1792 - val_pinn_loss: 326.1792 - learning_rate: 0.0001
+
+Epoch 91/100
+loss: 282.4728 - pinn_loss: 282.4728 - val_loss: 323.3532 - val_pinn_loss: 323.3532 - learning_rate: 0.0001
+
+Epoch 92/100
+loss: 281.8459 - pinn_loss: 281.8459 - val_loss: 324.1891 - val_pinn_loss: 324.1891 - learning_rate: 0.0001
+
+Epoch 93/100
+loss: 281.9599 - pinn_loss: 281.9599 - val_loss: 324.3200 - val_pinn_loss: 324.3200 - learning_rate: 0.0001
+
+Epoch 94/100
+loss: 281.9896 - pinn_loss: 281.9896 - val_loss: 324.6888 - val_pinn_loss: 324.6888 - learning_rate: 0.0001
+
+Epoch 95/100
+loss: 281.7625 - pinn_loss: 281.7625 - val_loss: 325.0354 - val_pinn_loss: 325.0354 - learning_rate: 0.0001
+
+Epoch 96/100
+loss: 282.5445 - pinn_loss: 282.5445 - val_loss: 323.3522 - val_pinn_loss: 323.3522 - learning_rate: 0.0001
+
+Epoch 97/100
+loss: 281.8474 - pinn_loss: 281.8474 - val_loss: 322.2508 - val_pinn_loss: 322.2508 - learning_rate: 0.0001
+
+Epoch 98/100
+loss: 280.7965 - pinn_loss: 280.7965 - val_loss: 326.0285 - val_pinn_loss: 326.0285 - learning_rate: 0.0001
+
+Epoch 99/100
+loss: 284.2416 - pinn_loss: 284.2416 - val_loss: 328.5651 - val_pinn_loss: 328.5651 - learning_rate: 0.0001
+
+Epoch 100/100
+loss: 282.3836 - pinn_loss: 282.3836 - val_loss: 322.8336 - val_pinn_loss: 322.8336 - learning_rate: 0.0001
