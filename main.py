@@ -35,7 +35,8 @@ from my_pages.performance_metrics import show_performance_metrics
 from common import load_models, load_data, pinn_loss, get_feature_importances, \
     load_simplified_models, prompt_user_for_columns, process_new_dataset, train_and_evaluate_physics_model, \
     train_and_evaluate_model, reset_state_and_prompt, load_existing_datasets, process_existing_dataset, \
-    prompt_user_for_partial_columns, show_train_models, show_upload_models, GeneticAlgorithmProgress, genetic_algorithm, show_genetic_algorithm
+    prompt_user_for_partial_columns, show_train_models, show_upload_models, GeneticAlgorithmProgress, genetic_algorithm, \
+    show_genetic_algorithm, simulated_annealing, show_simulated_annealing
 
 load_existing_datasets()
 
@@ -132,7 +133,7 @@ if 'columns_selected' in st.session_state:
                                           "Data Exploration Time Series Analysis",
                                           "Train Models",
                                           "Upload Models",
-                                          "Genetic Algorithm"])
+                                          "Genetic Algorithm", "Simulated Annealing"])
         feature_importance_df = get_feature_importances(processed_df, columns['heating_load'])
 
         if page == "Documentation and Explanation":
@@ -151,6 +152,8 @@ if 'columns_selected' in st.session_state:
             show_upload_models()
         elif page == "Genetic Algorithm":
             show_genetic_algorithm(processed_df, columns['heating_load'])
+        elif page == "Simulated Annealing":
+            show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'], columns['inlet_temp'], columns['water_flow'])
         else:
             st.write("Not implemented yet")
     else:
@@ -164,7 +167,7 @@ if 'columns_selected' in st.session_state:
                                           "Data Exploration Time Series Analysis",
                                           "Interactive Model Comparison",
                                           "Performance Metrics", "Interactive Data Filtering",
-                                          "Genetic Algorithm"])
+                                          "Genetic Algorithm", "Simulated Annealing"])
         if page == "Documentation and Explanation":
             show_documentation_full()
 
@@ -189,6 +192,8 @@ if 'columns_selected' in st.session_state:
             show_interactive_data_filtering(processed_df, classic_model, pinn_model, columns['heating_load'])
         elif page == "Genetic Algorithm":
             show_genetic_algorithm(processed_df, columns['heating_load'])
+        elif page == "Simulated Annealing":
+            show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'], columns['inlet_temp'], columns['water_flow'])
         else:
             st.write("Not implemented yet")
 
@@ -207,7 +212,7 @@ if 'selected_dataset' in st.session_state:
                                       "Data Exploration Statistics", "Data Exploration Time Series Analysis",
                                       "Interactive Model Comparison", "Interactive Model Comparison with Physics",
                                       "Performance Metrics", "Interactive Data Filtering",
-                                      "Genetic Algorithm"])
+                                      "Genetic Algorithm", "Simulated Annealing"])
 
     if page == "Documentation and Explanation":
         show_documentation_full()
@@ -231,5 +236,7 @@ if 'selected_dataset' in st.session_state:
         show_interactive_data_filtering(initial_df, standard_model, pinn_model)
     elif page == "Genetic Algorithm":
         show_genetic_algorithm(initial_df)
+    elif page == "Simulated Annealing":
+        show_simulated_annealing(initial_df)
     else:
         st.write("Not implemented yet")

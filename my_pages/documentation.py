@@ -17,6 +17,7 @@ def show_documentation_full():
         - **Performance Metrics**: Shows detailed performance metrics for the models to evaluate their effectiveness, alongside visualizations of the predictions.
         - **Interactive Data Filtering**: Enables interactive filtering of the dataset to focus on specific subsets of data, and see the model predictions for the filtered data.
         - **Genetic Algorithm**: Provides a genetic algorithm-based optimization tool to find the best hyperparameters for the models.
+        - **Simulated Annealing**: Offers a simulated annealing-based optimization tool to find the best alpha parameter for the PINN model.
         """)
 
 
@@ -65,4 +66,5 @@ def show_documentation_before_process_models():
         - **Train Models**: Allows you to configure and train machine learning models on the dataset. You can choose hyperparameters such as the number of layers, neurons per layer, learning rate, optimizer, activation function, epochs, batch size, validation split, and train/test split.
         - **Upload Models**: Enables you to upload pre-trained models for prediction and comparison instead of training new models.
         - **Genetic Algorithm**: Provides a genetic algorithm-based optimization tool to find the best hyperparameters for the models.
+         - **Simulated Annealing**: Offers a simulated annealing-based optimization tool to find the best alpha parameter for the PINN model.
         """)

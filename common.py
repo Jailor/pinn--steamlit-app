@@ -841,7 +841,7 @@ def show_genetic_algorithm(df, target_column = 'Water Heating Load (Btu)'):
     st.header("Genetic Algorithm Hyperparameters")
     ngen = st.slider("Number of Generations (NGEN)", min_value=1, max_value=100, value=20)
     population_size = st.slider("Population Size", min_value=1, max_value=100, value=20)
-    epochs = st.number_input("Epochs", 5, 1000, 50, help="Between 10 and 1000")
+    epochs = st.number_input("Epochs", 5, 1000, 50, help="Between 5 and 1000")
     batch_size = st.number_input("Batch Size", 16, 1024, 128, help="Between 16 and 1024")
 
     progress_bar = st.progress(0)
@@ -873,3 +873,208 @@ def show_genetic_algorithm(df, target_column = 'Water Heating Load (Btu)'):
         progress_callback = st.session_state.progress_callback
         progress_callback.on_user_end()
         print("GA stopped")
+
+
+def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_water_temp_column, inlet_temp_column, water_flow_column,
+                        progress_bar, status_text, log_text, log_file_path, alpha_plot, temperature_plot,
+                        initial_alpha, initial_temp, cooling_rate, min_temp):
+    class AlphaAdjustmentCallback(Callback):
+        def __init__(self,  progress_bar, status_text, log_text, log_file_path, epochs, alpha_plot, temperature_plot,
+                     initial_alpha=5.0, initial_temp=50.0, cooling_rate=0.955, min_temp=5.0):
+            super().__init__()
+            self.alpha = tf.Variable(initial_alpha, dtype=tf.float32, trainable=False)
+            self.temperature = initial_temp
+            self.cooling_rate = cooling_rate
+            self.min_temp = min_temp
+            self.last_loss = 1000000000
+            self.progress_bar = progress_bar
+            self.status_text = status_text
+            self.log_text = log_text
+            self.current_epoch = 0
+            self.logs = []
+            self.log_file_path = log_file_path
+            self.total_epochs = epochs
+            self.alphas = [initial_alpha]
+            self.temperatures = [initial_temp]
+            self.alpha_plot = alpha_plot
+            self.temperature_plot = temperature_plot
+
+        def on_epoch_end(self, epoch, logs=None):
+
+            if self.temperature > self.min_temp:
+                new_loss = logs.get('loss')
+                if new_loss < self.last_loss:
+                    accept = True
+                else:
+                    delta = new_loss - self.last_loss
+                    probability = np.exp(-delta / self.temperature)
+                    accept = np.random.rand() < probability
+
+                if accept:
+                    new_alpha = self.alpha * tf.exp(-1.0 / self.temperature)
+                    tf.keras.backend.set_value(self.alpha, new_alpha)
+                    self.temperature *= self.cooling_rate
+                    self.last_loss = new_loss
+
+            self.current_epoch += 1
+            progress = self.current_epoch / self.total_epochs
+            self.progress_bar.progress(progress)
+            self.status_text.text(f"Simulated Annealing in progress: {int(progress * 100)}% complete")
+
+            # Format and append the current epoch log
+            log_message = f"Epoch {epoch + 1}/{self.total_epochs}\n"
+            log_message += " - ".join([f"{k}: {v:.4f}" for k, v in logs.items()]) + "\n"
+            log_message += f"alpha: {tf.keras.backend.get_value(self.alpha):.4f}, temperature: {self.temperature:.4f}"
+            self.logs.append(log_message)
+
+            # Join all logs and display them in the text area
+            full_log_message = "\n".join(self.logs)
+            # self.log_text.text_area("Training Log", full_log_message, height=400, max_chars=None)
+            self.log_text.text_area("Training Log", log_message, height=400, max_chars=None)
+
+
+            self.alphas.append(tf.keras.backend.get_value(self.alpha))
+            self.temperatures.append(self.temperature)
+
+            if self.total_epochs == self.current_epoch:
+                with open(self.log_file_path, 'w') as log_file:
+                    log_file.write("\n".join(self.logs))
+                    st.write("Training complete. Logs saved to file at:", self.log_file_path)
+                self.log_text.text_area("Training Log", full_log_message, height=400, max_chars=None)
+
+                plt.figure(figsize=(10, 6))
+                plt.plot( np.arange(0, self.total_epochs + 1), self.alphas, label='Alpha')
+                plt.xlabel('Epochs')
+                plt.ylabel('Alpha')
+                plt.title('Dynamic Adjustment of Alpha Over Training Epochs')
+                plt.legend()
+                plt.grid(True)
+                # self.diversity_plot.pyplot(
+                self.alpha_plot.pyplot(plt.gcf())
+
+                # Plotting temperature values over epochs
+                plt.figure(figsize=(10, 6))
+                plt.plot(np.arange(0, self.total_epochs + 1), self.temperatures, label='Temperature', color='orange')
+                plt.xlabel('Epochs')
+                plt.ylabel('Temperature')
+                plt.title('Temperature Cooling Schedule Over Training Epochs')
+                plt.legend()
+                plt.grid(True)
+                self.temperature_plot.pyplot(plt.gcf())
+
+            print(f'Epoch {epoch + 1}: α updated to {tf.keras.backend.get_value(self.alpha)}, temperature to {self.temperature}')
+
+
+    X = df.drop(columns=[heating_load_column])
+    y = df[heating_load_column]
+
+
+    outlet_water_temp = X.iloc[:, X.columns.get_loc(outlet_water_temp_column)].to_numpy().reshape(-1, 1)
+    inlet_temp = X.iloc[:, X.columns.get_loc(inlet_temp_column)].to_numpy().reshape(-1, 1)
+    water_flow = X.iloc[:, X.columns.get_loc(water_flow_column)].to_numpy().reshape(-1, 1)
+
+    y_np = y.to_numpy().reshape(-1, 1)
+
+    y_with_features = np.concatenate(
+        [y_np, outlet_water_temp, inlet_temp, water_flow], axis=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y_with_features, test_size=0.2, random_state=42)
+    lambda_reg = 0.0001
+
+    def custom_loss(alpha):
+        def loss(y_true_with_features, y_pred):
+            y_true = y_true_with_features[:, 0:1]
+            outlet_water_temp = y_true_with_features[:, 1:2]
+            inlet_temp = y_true_with_features[:, 2:3]
+            water_flow = y_true_with_features[:, 3:4]
+
+            specific_heat_capacity = 4174  # J/kg°C, specific heat capacity of water
+            gallons_to_liters = 3.78541  # 1 gallon = 3.78541 liters
+            fahrenheit_to_celsius = lambda f: (f - 32) * 5.0 / 9.0  # Convert °F to °C
+            joules_to_btu = 0.0009478171
+
+            flow_rate_liters = water_flow * gallons_to_liters
+            inlet_temp_c = fahrenheit_to_celsius(inlet_temp)
+            outlet_temp_c = fahrenheit_to_celsius(outlet_water_temp)
+
+            current_alpha = tf.keras.backend.get_value(alpha)
+            reg_loss = tf.reduce_sum([tf.nn.l2_loss(v) for v in model.trainable_weights])
+
+            heat_output = flow_rate_liters * (outlet_temp_c - inlet_temp_c) * specific_heat_capacity * joules_to_btu
+            return tf.reduce_mean(tf.abs(y_true - y_pred) + current_alpha * tf.abs(heat_output - y_pred) + lambda_reg * reg_loss, axis=-1)
+
+        return loss
+
+    model = Sequential()
+    model.add(Dense(227, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(227, activation='relu'))
+    model.add(Dense(1, activation='linear'))
+
+    alpha_adjust_callback = AlphaAdjustmentCallback( progress_bar, status_text, log_text, log_file_path, epochs,
+                                                     alpha_plot, temperature_plot,
+                                                     initial_alpha, initial_temp, cooling_rate, min_temp)
+    model.compile(optimizer=Adam(learning_rate=0.0009323), loss=custom_loss(alpha_adjust_callback.alpha), metrics=['mae'], run_eagerly=True)
+    # Callbacks
+    lr_scheduler = ReduceLROnPlateau(factor=0.66, patience=5)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=20)
+    model_checkpoint = ModelCheckpoint('best_model_boltzman.keras', monitor='val_loss', save_best_only=True)
+
+    try:
+        history = model.fit(X_train, y_train, validation_split=0.2,
+                            epochs=epochs, batch_size=batch_size,
+                            callbacks=[early_stopping, lr_scheduler, model_checkpoint, alpha_adjust_callback])
+    except Exception as e:
+        print(f"An error occurred during training: {e}")
+
+    model.load_weights('best_model_boltzman.keras')
+
+    y_pred = model.predict(X_test)
+
+    rmse = mean_squared_error(y_test[:, 0], y_pred, squared=False)
+    r2 = r2_score(y_test[:, 0], y_pred)
+    mean_observed = y_test[:, 0].mean()
+    cvrmse = (rmse / mean_observed) * 100
+    mae = mean_absolute_error(y_test[:, 0], y_pred)
+    mape = (mae * 100) / mean_observed
+
+    print(f"Root Mean Squared Error: {rmse}")
+    print(f"R^2 Score: {r2}")
+    print(f"cvRMSE: {cvrmse}%")
+    print(f"Mean Absolute Error: {mae}")
+    print(f"Mean Absolute Percentage Error: {mape}%")
+
+    st.write(f"Root Mean Squared Error: {rmse}")
+    st.write(f"R^2 Score: {r2}")
+    st.write(f"cvRMSE: {cvrmse}%")
+    st.write(f"Mean Absolute Error: {mae}")
+    st.write(f"Mean Absolute Percentage Error: {mape}%")
+
+def show_simulated_annealing(df, heating_load_column='Water Heating Load (Btu)', outlet_water_temp_column='Hot Water Temp (F)',
+                                inlet_temp_column='Inlet Temp (F)', water_flow_column='Water Flow (Gallons)'):
+    epochs = st.number_input("Epochs", 5, 1000, 10, help="Between 5 and 1000")
+    batch_size = st.number_input("Batch Size", 16, 1024, 128, help="Between 16 and 1024")
+    initial_alpha = st.number_input("Initial Alpha", 0.1, 10.0, 5.0, help="Between 0.1 and 10.0")
+    initial_temp = st.number_input("Initial Temperature", 1.0, 100.0, 50.0, help="Between 1.0 and 100.0")
+    cooling_rate = st.number_input("Cooling Rate", 0.1, 1.0, 0.955, help="Between 0.1 and 1.0")
+    min_temp = st.number_input("Minimum Temperature", 1.0, 100.0, 5.0, help="Between 1.0 and 100.0")
+
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    log_text = st.empty()
+    log_file_path = "logs/simulated_annealing_algorithm.log"
+    alpha_plot = st.empty()
+    temperature_plot = st.empty()
+
+    start_button = st.button("Start Simulated Annealing", disabled=False)
+
+    if start_button:
+        print("SA started")
+        simulated_annealing(df, epochs=epochs, batch_size=batch_size,
+                            heating_load_column=heating_load_column,
+                            outlet_water_temp_column=outlet_water_temp_column,
+                            inlet_temp_column=inlet_temp_column,
+                            water_flow_column=water_flow_column,
+                            progress_bar=progress_bar, status_text=status_text, log_text=log_text,
+                            log_file_path=log_file_path,
+                            alpha_plot=alpha_plot, temperature_plot=temperature_plot,
+                            initial_alpha=initial_alpha, initial_temp=initial_temp, cooling_rate=cooling_rate,
+                            min_temp=min_temp)
