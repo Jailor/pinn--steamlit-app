@@ -1,4 +1,6 @@
 import os
+import threading
+
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
@@ -33,10 +35,7 @@ from my_pages.performance_metrics import show_performance_metrics
 from common import load_models, load_data, pinn_loss, get_feature_importances, \
     load_simplified_models, prompt_user_for_columns, process_new_dataset, train_and_evaluate_physics_model, \
     train_and_evaluate_model, reset_state_and_prompt, load_existing_datasets, process_existing_dataset, \
-    prompt_user_for_partial_columns, show_train_models, show_upload_models
-import h5py
-import io
-import tempfile
+    prompt_user_for_partial_columns, show_train_models, show_upload_models, GeneticAlgorithmProgress, genetic_algorithm, show_genetic_algorithm
 
 load_existing_datasets()
 
@@ -84,7 +83,6 @@ if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.sess
             print(f"Error loading data: {e}")
             reset_state_and_prompt()
 
-
 # If a file has been uploaded, use it
 if 'uploaded_file' in st.session_state and 'initial_df' in st.session_state:
     initial_df = st.session_state['initial_df']
@@ -113,6 +111,8 @@ if 'uploaded_file' in st.session_state and 'initial_df' in st.session_state:
         else:
             st.write("Not implemented yet")
 
+
+
 if 'columns_selected' in st.session_state:
     columns = st.session_state['columns']
 
@@ -131,7 +131,8 @@ if 'columns_selected' in st.session_state:
                                           "Data Exploration Statistics",
                                           "Data Exploration Time Series Analysis",
                                           "Train Models",
-                                          "Upload Models"])
+                                          "Upload Models",
+                                          "Genetic Algorithm"])
         feature_importance_df = get_feature_importances(processed_df, columns['heating_load'])
 
         if page == "Documentation and Explanation":
@@ -148,6 +149,8 @@ if 'columns_selected' in st.session_state:
 
         elif page == "Upload Models":
             show_upload_models()
+        elif page == "Genetic Algorithm":
+            show_genetic_algorithm(processed_df, columns['heating_load'])
         else:
             st.write("Not implemented yet")
     else:
@@ -160,7 +163,8 @@ if 'columns_selected' in st.session_state:
                                           "Data Exploration Statistics",
                                           "Data Exploration Time Series Analysis",
                                           "Interactive Model Comparison",
-                                          "Performance Metrics", "Interactive Data Filtering"])
+                                          "Performance Metrics", "Interactive Data Filtering",
+                                          "Genetic Algorithm"])
         if page == "Documentation and Explanation":
             show_documentation_full()
 
@@ -183,7 +187,8 @@ if 'columns_selected' in st.session_state:
 
         elif page == "Interactive Data Filtering":
             show_interactive_data_filtering(processed_df, classic_model, pinn_model, columns['heating_load'])
-
+        elif page == "Genetic Algorithm":
+            show_genetic_algorithm(processed_df, columns['heating_load'])
         else:
             st.write("Not implemented yet")
 
@@ -201,7 +206,8 @@ if 'selected_dataset' in st.session_state:
     page = st.sidebar.radio("Go to", ["Documentation and Explanation",
                                       "Data Exploration Statistics", "Data Exploration Time Series Analysis",
                                       "Interactive Model Comparison", "Interactive Model Comparison with Physics",
-                                      "Performance Metrics", "Interactive Data Filtering"])
+                                      "Performance Metrics", "Interactive Data Filtering",
+                                      "Genetic Algorithm"])
 
     if page == "Documentation and Explanation":
         show_documentation_full()
@@ -223,5 +229,7 @@ if 'selected_dataset' in st.session_state:
 
     elif page == "Interactive Data Filtering":
         show_interactive_data_filtering(initial_df, standard_model, pinn_model)
+    elif page == "Genetic Algorithm":
+        show_genetic_algorithm(initial_df)
     else:
         st.write("Not implemented yet")

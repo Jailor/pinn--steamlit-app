@@ -18,7 +18,11 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint, C
 from sklearn.model_selection import train_test_split, KFold, cross_validate
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import numpy as np
-
+from deap import base, creator, tools, algorithms
+from deap import tools
+import random
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def get_optimizer(optimizer_name, learning_rate):
@@ -193,7 +197,7 @@ class StreamlitProgressBar(Callback):
         self.log_text.text_area("Training Log", log_message, height=400, max_chars=None)
 
         if self.total_epochs == self.current_epoch:
-            with open(self.log_file_path, 'a') as log_file:
+            with open(self.log_file_path, 'w') as log_file:
                 log_file.write("\n".join(self.logs))
                 st.write("Training complete. Logs saved to file at:", self.log_file_path)
             self.log_text.text_area("Training Log", full_log_message, height=400, max_chars=None)
@@ -558,3 +562,314 @@ def get_distances(standard_pred, pinn_pred, heat_output_physics):
         d1, d2 = d2, d1
         standard_pred[0][0], pinn_pred[0][0] = pinn_pred[0][0], standard_pred[0][0]
     return d1, d2
+
+
+def plot_population_diversity(population, generation):
+    num_layers = [ind[0] for ind in population]
+    neurons_per_layer = [ind[1] for ind in population]
+    learning_rates_power = [ind[2] for ind in population]
+
+    optimizers = [ind[3] for ind in population]
+    activation_functions = [ind[4] for ind in population]
+
+    layer_counts = [num_layers.count(i) for i in range(1, 5)]
+
+    fig, axs = plt.subplots(5, 1, figsize=(10, 20))
+
+    axs[0].bar(range(1, 5), layer_counts, edgecolor='black')
+    axs[0].set_title(f'Number of Layers Distribution (Generation {generation})')
+    axs[0].set_xlabel('Number of Layers')
+    axs[0].set_ylabel('Frequency')
+    axs[0].set_xticks(range(1, 5))
+
+    axs[1].hist(neurons_per_layer, bins=range(32, 513, 48), edgecolor='black')
+    axs[1].set_title(f'Neurons Per Layer Distribution (Generation {generation})')
+    axs[1].set_xlabel('Neurons Per Layer')
+    axs[1].set_ylabel('Frequency')
+
+    axs[2].hist(learning_rates_power, bins=12, edgecolor='black')
+    axs[2].set_title(f'Learning Rates Distribution (Generation {generation})')
+    axs[2].set_xlabel('Learning Rate Power')
+    axs[2].set_ylabel('Frequency')
+
+    optimizer_counts = {opt: optimizers.count(opt) for opt in set(optimizers)}
+    axs[3].bar(optimizer_counts.keys(), optimizer_counts.values(), color='blue', edgecolor='black')
+    axs[3].set_title(f'Distribution of Optimizers (Generation {generation})')
+    axs[3].set_xlabel('Optimizer')
+    axs[3].set_ylabel('Frequency')
+
+    activation_counts = {act: activation_functions.count(act) for act in set(activation_functions)}
+    axs[4].bar(activation_counts.keys(), activation_counts.values(), color='blue', edgecolor='black')
+    axs[4].set_title(f'Distribution of Activation Functions (Generation {generation})')
+    axs[4].set_xlabel('Activation Function')
+    axs[4].set_ylabel('Frequency')
+
+    plt.tight_layout()
+    return fig
+
+
+def plot_fitness_evolution(best_fitness):
+    plt.figure(figsize=(10, 6))
+    plt.plot(best_fitness, label='Best MAE', color='red')
+    # plt.plot(avg_fitness, label='Average MAE', color='blue')
+    plt.xlabel('Generation')
+    plt.ylabel('MAE')
+    plt.title('Evolution of MAE over Generations')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    return plt.gcf()
+
+class GeneticAlgorithmProgress:
+    def __init__(self, progress_bar, status_text, log_text, log_file_path, diversity_plot, fitness_plot):
+        self.progress_bar = progress_bar
+        self.status_text = status_text
+        self.log_text = log_text
+        self.log_file_path = log_file_path
+        self.diversity_plot = diversity_plot
+        self.fitness_plot = fitness_plot
+        self.total_generations = 0
+        self.current_generation = 0
+        self.logs = []
+        self.most_recent_diversity_plot = None
+        self.most_recent_fitness_plot = None
+
+    def reset(self, total_generations):
+        self.total_generations = total_generations
+        self.current_generation = 0
+        self.logs = []
+        self.progress_bar.progress(0)
+        self.status_text.text("Genetic Algorithm in progress: 0% complete (Generation 0)")
+        self.log_text.text_area("Genetic Algorithm Log", "No results yet", height=400, max_chars=None)
+        self.diversity_plot.empty()
+        self.fitness_plot.empty()
+        self.most_recent_diversity_plot = None
+        self.most_recent_fitness_plot = None
+
+    def on_generation_end(self, generation, logs,  population_diversity_plot, best_fitness_plot):
+        self.current_generation += 1
+        progress = self.current_generation / self.total_generations
+        self.progress_bar.progress(progress)
+        self.status_text.text(
+            f"Genetic Algorithm in progress: {int(progress * 100)}% complete (Generation {generation + 1})")
+
+        # Format and append the current generation log
+        log_message = f"Generation {generation + 1}/{self.total_generations}\n"
+        formatted_logs = []
+        for k, v in logs.items():
+            if isinstance(v, (float, int)):
+                formatted_logs.append(f"{k}: {v:.4f}")
+            else:
+                formatted_logs.append(f"{k}: {v}")
+        log_message += " - ".join(formatted_logs) + "\n"
+        self.logs.append(log_message)
+
+        # Join all logs and display them in the text area
+        full_log_message = "\n".join(self.logs)
+        self.log_text.text_area("Genetic Algorithm Log", full_log_message, height=400, max_chars=None)
+
+        self.diversity_plot.pyplot(population_diversity_plot)
+        self.fitness_plot.pyplot(best_fitness_plot)
+        self.most_recent_diversity_plot = population_diversity_plot
+        self.most_recent_fitness_plot = best_fitness_plot
+
+        if self.total_generations == self.current_generation:
+            self._save_logs()
+
+    def on_user_end(self):
+        self.status_text.text("Genetic Algorithm stopped by user at generation " + str(self.current_generation + 1))
+        self.progress_bar.progress(1.0)
+        full_log_message = "\n".join(self.logs)
+        self.log_text.text_area("Genetic Algorithm Log", full_log_message, height=400, max_chars=None)
+        if self.most_recent_diversity_plot is not None and self.most_recent_fitness_plot is not None:
+            self.diversity_plot.pyplot(self.most_recent_diversity_plot)
+            self.fitness_plot.pyplot(self.most_recent_fitness_plot)
+        self._save_logs()
+
+    def _save_logs(self):
+        with open(self.log_file_path, 'w') as log_file:
+            log_file.write("\n".join(self.logs))
+        st.write("Logs saved to file at:", self.log_file_path)
+
+
+def is_valid(individual):
+    num_layers, neurons_per_layer, lr, optimizer_name, activation_function = individual
+    # Check for valid ranges and types
+    if not (1 <= num_layers <= 4):
+        return False
+    if not (32 <= neurons_per_layer <= 512):
+        return False
+    if not (-4 <= lr <= -1):
+        return False
+    if optimizer_name not in ['adam', 'sgd', 'rmsprop']:
+        return False
+    if activation_function not in ['relu', 'tanh']:
+        return False
+    return True
+
+def genetic_algorithm(df, NGEN, EPOCHS, POPULATION_SIZE, BATCH_SIZE, target_column = 'Water Heating Load (Btu)'):
+
+    X = df.drop(columns=[target_column])
+    y = df[target_column]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    optimizers = {'adam': Adam, 'sgd': SGD, 'rmsprop': RMSprop}
+
+    # Define the genetic algorithm functions
+    def create_model(num_layers, neurons_per_layer, learning_rate, optimizer_name, activation_function):
+        optimizer_class = optimizers[optimizer_name]
+        model = Sequential()
+        model.add(Dense(neurons_per_layer, input_dim=X_train.shape[1], activation=activation_function))
+        for _ in range(num_layers - 1):
+            model.add(Dense(neurons_per_layer, activation=activation_function))
+        model.add(Dense(1, activation='linear'))
+        model.compile(optimizer=optimizer_class(learning_rate=learning_rate), loss='mean_absolute_error')
+        return model
+
+    def evaluate_individual(individual):
+        if st.session_state.stopGeneticAlgorithm:
+            return (1e7,)
+        if not is_valid(individual):
+            print(f"1 Failed to train or predict with {individual}")
+            return (1e7,),
+
+        num_layers, neurons_per_layer, lr, optimizer_name, activation_function = individual
+        model = create_model(num_layers, neurons_per_layer, 10 ** lr, optimizer_name, activation_function)
+        model.fit(X_train, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=0)
+        predictions = model.predict(X_test)
+
+        if np.any(np.isnan(predictions)):
+            print(f"2 Failed to train or predict with {individual}")
+            return (1e7,)
+
+        mae = mean_absolute_error(y_test, predictions)
+        return (mae,)
+
+    # Define low and up bounds for numerical attributes
+    low = [1, 32, -4]
+    up = [4, 512, -1]
+
+    def mutate_individual(individual, num_attrs, cat_attrs, indpb):
+        # Mutate numerical attributes
+        for i in range(num_attrs):
+            if random.random() < indpb:
+                if i < 2:
+                    individual[i] = int(random.uniform(low[i], up[i]))
+                else:
+                    individual[i] = random.uniform(low[i], up[i])
+
+        # Mutate categorical attributes
+        for i in range(num_attrs, num_attrs + cat_attrs):
+            if random.random() < indpb:
+                individual[i] = random.choice(['adam', 'sgd', 'rmsprop'] if i == num_attrs else ['relu', 'tanh'])
+
+        return individual,
+
+    # Setup DEAP
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMin)
+
+    toolbox = base.Toolbox()
+    toolbox.register("attr_num_layers", random.randint, 1, 4)
+    toolbox.register("attr_neurons_per_layer", random.randint, 32, 512)
+    toolbox.register("attr_learning_rate", random.uniform, -4, -1)
+    toolbox.register("attr_optimizer", random.choice, ['adam', 'sgd', 'rmsprop'])
+    toolbox.register("attr_activation", random.choice, ['relu', 'tanh'])
+
+    toolbox.register("individual", tools.initCycle, creator.Individual,
+                     (toolbox.attr_num_layers, toolbox.attr_neurons_per_layer, toolbox.attr_learning_rate,
+                      toolbox.attr_optimizer, toolbox.attr_activation),
+                     n=1)
+
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    toolbox.register("evaluate", evaluate_individual)
+    toolbox.register("mate", tools.cxTwoPoint)
+    toolbox.register("select", tools.selTournament, tournsize=9)
+
+    # Register the custom mutation function
+    toolbox.register("mutate", mutate_individual, num_attrs=3, cat_attrs=2, indpb=0.333)
+
+    # Genetic Algorithm parameters
+    population = toolbox.population(n=POPULATION_SIZE)
+
+    all_generations = []
+    best_fitness = []
+    avg_fitness = []
+
+    for gen in range(NGEN):
+        if st.session_state.stopGeneticAlgorithm:
+            return
+        print("Generation ", gen)
+        offspring = algorithms.varAnd(population, toolbox, cxpb=0.5, mutpb=0.2)
+        fits = toolbox.map(toolbox.evaluate, offspring)
+        for fit, ind in zip(fits, offspring):
+            ind.fitness.values = fit
+        population = toolbox.select(offspring, k=len(population))
+        best_ind = tools.selBest(population, 1)[0]
+        print(
+            f"Best individual this gen: Layers: {best_ind[0]}, Neurons: {best_ind[1]}, Learning Rate: {10 ** best_ind[2]}, Optimizer: {best_ind[3]}, Activation: {best_ind[4]}")
+        print(f"Best MAE this gen: {best_ind.fitness.values[0]}")
+
+        # top_individuals = tools.selBest(population, 5)
+        # for i, ind in enumerate(top_individuals, 1):
+        #     print(f"Top {i} individual: {ind}, MAE: {ind.fitness.values[0]}")
+        all_generations.append(list(population))
+        best_fitness.append(min([ind.fitness.values[0] for ind in population]))
+        # avg_fitness.append(np.mean([ind.fitness.values[0] for ind in population]))
+        #   print("Avg MAE this gen: ", avg_fitness[-1])
+        # print("Best MAE this gen: ", best_fitness[-1])
+
+        log_data = {
+            "Best individual": {
+                "Layers": best_ind[0],
+                "Neurons": best_ind[1],
+                "Learning Rate": 10 ** best_ind[2],
+                "Optimizer": best_ind[3],
+                "Activation": best_ind[4],
+                "MAE": best_ind.fitness.values[0]
+            }
+        }
+        population_diversity_plot = plot_population_diversity(population, gen)
+        best_fitness_plot = plot_fitness_evolution(best_fitness)
+
+        st.session_state.progress_callback.on_generation_end(gen, log_data, population_diversity_plot, best_fitness_plot)
+
+def show_genetic_algorithm(df, target_column = 'Water Heating Load (Btu)'):
+    st.title("Genetic Algorithm for Model Optimization")
+    st.write("Use the buttons below to start or stop the genetic algorithm.")
+
+    st.header("Genetic Algorithm Hyperparameters")
+    ngen = st.slider("Number of Generations (NGEN)", min_value=1, max_value=100, value=20)
+    population_size = st.slider("Population Size", min_value=1, max_value=100, value=20)
+    epochs = st.number_input("Epochs", 5, 1000, 50, help="Between 10 and 1000")
+    batch_size = st.number_input("Batch Size", 16, 1024, 128, help="Between 16 and 1024")
+
+    progress_bar = st.progress(0)
+    # status_text = st.text("Genetic Algorithm not started yet")
+    # log_text = st.text_area("Genetic Algorithm Temporary Log", "No results yet", height=400, max_chars=None)
+    status_text = st.empty()
+    log_text = st.empty()
+    diversity_plot = st.empty()
+    fitness_plot = st.empty()
+    log_file_path = "logs/genetic_algorithm.log"
+
+    if 'stopGeneticAlgorithm' not in st.session_state:
+        st.session_state.stopGeneticAlgorithm = False
+        st.session_state.progress_callback = \
+            GeneticAlgorithmProgress(progress_bar, status_text, log_text, log_file_path, diversity_plot, fitness_plot)
+
+    start_button = st.button("Start Genetic Algorithm", disabled=False)
+    stop_button = st.button("Stop Genetic Algorithm", disabled=False)
+
+    if start_button:
+        st.session_state.stopGeneticAlgorithm = False
+        progress_callback = st.session_state.progress_callback
+        progress_callback.reset(ngen)
+        print("GA started")
+        genetic_algorithm(df, ngen, epochs, population_size, batch_size, target_column)
+
+    if stop_button:
+        st.session_state.stopGeneticAlgorithm = True
+        progress_callback = st.session_state.progress_callback
+        progress_callback.on_user_end()
+        print("GA stopped")

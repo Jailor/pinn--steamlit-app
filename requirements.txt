@@ -3,9 +3,12 @@ pip
 wheel
 h5py
 pandas
-numpy<2.0.0
+scikit-learn
 tensorflow
 keras
-scikit-learn
+numpy<2.0.0
 plotly
 h5py
+deap
+matplotlib
+seaborn

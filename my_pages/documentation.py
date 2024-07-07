@@ -16,6 +16,7 @@ def show_documentation_full():
         - **Interactive Model Comparison with Physics**: Allows you to compare the predictions of the standard model, the PINN model, and the physics-based model (formula).
         - **Performance Metrics**: Shows detailed performance metrics for the models to evaluate their effectiveness, alongside visualizations of the predictions.
         - **Interactive Data Filtering**: Enables interactive filtering of the dataset to focus on specific subsets of data, and see the model predictions for the filtered data.
+        - **Genetic Algorithm**: Provides a genetic algorithm-based optimization tool to find the best hyperparameters for the models.
         """)
 
 
@@ -48,7 +49,6 @@ def show_documentation_before_process_dataset():
     - **Data Exploration Statistics**: Displays statistical analysis and summaries of the dataset to help you understand the data better.
     - **Data Exploration Time Series Analysis**: Offers tools for time series analysis of the dataset to identify trends and patterns over time.
     - **Process Dataset**: Allows you to preprocess the dataset, by dropping irrelevant columns and specifying which columns correspond to heating load calculations.
-    
     """)
 
 def show_documentation_before_process_models():
@@ -64,4 +64,5 @@ def show_documentation_before_process_models():
         - **Data Exploration Time Series Analysis**: Offers tools for time series analysis of the dataset to identify trends and patterns over time.
         - **Train Models**: Allows you to configure and train machine learning models on the dataset. You can choose hyperparameters such as the number of layers, neurons per layer, learning rate, optimizer, activation function, epochs, batch size, validation split, and train/test split.
         - **Upload Models**: Enables you to upload pre-trained models for prediction and comparison instead of training new models.
+        - **Genetic Algorithm**: Provides a genetic algorithm-based optimization tool to find the best hyperparameters for the models.
         """)
