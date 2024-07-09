@@ -23,7 +23,7 @@ from sklearn.model_selection import train_test_split, KFold, cross_validate
 from sklearn.metrics import root_mean_squared_error, mean_squared_error, r2_score, mean_absolute_error, \
     mean_absolute_percentage_error
 from my_pages.documentation import show_documentation_full, show_documentation_before_process_dataset, \
-    show_documentation_before_process_models
+    show_documentation_before_process_models, show_documentation_initial
 from my_pages.data_exploration import show_data_exploration_statistics, \
     show_data_exploration_time_series_analysis_generic, show_data_exploration_statistics_generic
 from my_pages.interactive_data_filtering import show_interactive_data_filtering
@@ -38,51 +38,101 @@ from common import load_models, load_data, pinn_loss, get_feature_importances, \
     prompt_user_for_partial_columns, show_train_models, show_upload_models, GeneticAlgorithmProgress, genetic_algorithm, \
     show_genetic_algorithm, simulated_annealing, show_simulated_annealing
 
+st.set_page_config(
+    page_title="HPWH Heating Load Prediction Application",
+    page_icon=":zap:",
+)
+
+
+def go_back(current_tab: str):
+    if current_tab == "uploaded_file":
+        st.session_state.pop('uploaded_file')
+    elif current_tab == "selected_dataset":
+        st.session_state.pop('selected_dataset')
+    elif current_tab == "partial_columns_selected":
+        st.session_state.pop('filtered_df_initial')
+        st.session_state.pop('timestamp_column')
+        st.session_state.pop('heating_load_column')
+    elif current_tab == "full_columns_selected":
+        st.session_state.pop('filtered_df')
+        st.session_state.pop('processed_df')
+        st.session_state.pop('columns')
+        st.session_state.pop('columns_selected')
+        if 'best_individual' in st.session_state:
+            st.session_state.pop('best_individual')
+        if 'best_individual_so_far' in st.session_state:
+            st.session_state.pop('best_individual_so_far')
+    elif current_tab == "models_trained_uploaded":
+        st.session_state.pop('model')
+        st.session_state.pop('pinn_model')
+        if 'best_individual' in st.session_state:
+            st.session_state.pop('best_individual')
+        if 'best_individual_so_far' in st.session_state:
+            st.session_state.pop('best_individual_so_far')
+
+    st.rerun()
+
 load_existing_datasets()
 
+
 if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.session_state:
-    st.title('Upload a dataset to analyze')
+    st.sidebar.title("HPWH Heating Load Prediction Application")
+    page = st.sidebar.radio("Navigation", ["Documentation", "Upload or select Dataset"])
 
-    uploaded_file = None
-    selected_dataset = None
+    if page == "Documentation":
+        show_documentation_initial()
+    elif page == "Upload or select Dataset":
+        st.title('Upload or select Dataset')
+        st.markdown("""
+               Upload a new time-series dataset or choose an existing one from the list. The dataset must necessarily
+               contain a column representing the timestamp and a column representing the heating load of the HPWH. After
+               uploading, the application will guide you through the process of selecting the
+               relevant columns for the analysis.
+               """)
 
-    with st.form("initial_upload_file_form", clear_on_submit=True):
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv", key="initial_file_uploader")
-        submitted = st.form_submit_button("Upload")
+        st.header("Upload a new dataset:")
+        uploaded_file = None
+        selected_dataset = None
 
-    st.header("Or select an existing dataset:")
-    selected_dataset = st.selectbox("Select a dataset", list(st.session_state['datasets'].keys()))
-    submitted_select = st.button("Select")
+        with st.form("initial_upload_file_form", clear_on_submit=True):
+            uploaded_file = st.file_uploader("Choose a CSV file", type="csv", key="initial_file_uploader")
+            submitted = st.form_submit_button("Upload")
 
-    if st.session_state.get('error_message'):
-        st.error(st.session_state['error_message'])
-        st.session_state.pop('error_message')
+        st.header("Or select an existing dataset:")
+        selected_dataset = st.selectbox("Select a dataset", list(st.session_state['datasets'].keys()))
+        submitted_select = st.button("Select")
 
-    # If a file is uploaded, save it in the session state
-    if submitted and uploaded_file is not None:
-        try:
-            initial_df = load_data(uploaded_file)
-            st.session_state['initial_df'] = initial_df
-            st.session_state['uploaded_file'] = uploaded_file
-            # st.session_state['is_new_dataset'] = True
-            st.rerun()
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            reset_state_and_prompt()
+        if st.session_state.get('error_message'):
+            st.error(st.session_state['error_message'])
+            st.session_state.pop('error_message')
 
-    # If an existing dataset is selected, save it in the session state
-    if submitted_select and selected_dataset is not None:
-        try:
-            print(f"Selected dataset: {selected_dataset}")
-            initial_df = st.session_state['datasets'][selected_dataset]
-            initial_df = process_existing_dataset(initial_df, selected_dataset)
-            st.session_state['initial_df'] = initial_df
-            st.session_state['selected_dataset'] = selected_dataset
-            # st.session_state['is_new_dataset'] = False
-            st.rerun()
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            reset_state_and_prompt()
+        # If a file is uploaded, save it in the session state
+        if submitted and uploaded_file is not None:
+            try:
+                initial_df = load_data(uploaded_file)
+                st.session_state['initial_df'] = initial_df
+                st.session_state['uploaded_file'] = uploaded_file
+                # st.session_state['is_new_dataset'] = True
+                st.rerun()
+            except Exception as e:
+                print(f"Error loading data: {e}")
+                reset_state_and_prompt()
+
+        # If an existing dataset is selected, save it in the session state
+        if submitted_select and selected_dataset is not None:
+            try:
+                print(f"Selected dataset: {selected_dataset}")
+                initial_df = st.session_state['datasets'][selected_dataset]
+                initial_df = process_existing_dataset(initial_df, selected_dataset)
+                st.session_state['initial_df'] = initial_df
+                st.session_state['selected_dataset'] = selected_dataset
+                # st.session_state['is_new_dataset'] = False
+                st.rerun()
+            except Exception as e:
+                print(f"Error loading data: {e}")
+                reset_state_and_prompt()
+    else:
+        st.write("Not implemented yet")
 
 # If a file has been uploaded, use it
 if 'uploaded_file' in st.session_state and 'initial_df' in st.session_state:
@@ -90,18 +140,25 @@ if 'uploaded_file' in st.session_state and 'initial_df' in st.session_state:
 
     if 'timestamp_column' not in st.session_state:
         prompt_user_for_partial_columns(initial_df)
+        st.sidebar.title("HPWH Heating Load Prediction Application")
+        if st.sidebar.button("Go back"):
+            go_back("uploaded_file")
 
     elif 'columns_selected' not in st.session_state:
         filtered_df = st.session_state['filtered_df_initial']
-        st.sidebar.title("Navigation")
-        page = st.sidebar.radio("Go to", ["Documentation and Explanation",
-                                          "Data Exploration Statistics",
-                                          "Data Exploration Time Series Analysis",
-                                          "Process Dataset"])
+        st.sidebar.title("HPWH Heating Load Prediction Application")
+        page = st.sidebar.radio("Navigation", ["Documentation",
+                                              "Data Exploration Statistics",
+                                              "Data Exploration Time Series Analysis",
+                                              "Process Dataset"],
+                                index=1)
+        if st.sidebar.button("Go back"):
+            go_back("partial_columns_selected")
+
         if 'is_reduced_dataset' in st.session_state and st.session_state['is_reduced_dataset']:
             st.sidebar.warning("The dataset has been automatically reduced to 50k elements to preserve performance.")
 
-        if page == "Documentation and Explanation":
+        if page == "Documentation":
             show_documentation_before_process_dataset()
         elif page == "Data Exploration Statistics":
             show_data_exploration_statistics_generic(filtered_df)
@@ -127,16 +184,22 @@ if 'columns_selected' in st.session_state:
         processed_df = st.session_state['processed_df']
 
     if 'model' not in st.session_state or 'pinn_model' not in st.session_state:
-        st.sidebar.title("Navigation")
-        page = st.sidebar.radio("Go to", ["Documentation and Explanation",
-                                          "Data Exploration Statistics",
-                                          "Data Exploration Time Series Analysis",
-                                          "Train Models",
-                                          "Upload Models",
-                                          "Genetic Algorithm", "Simulated Annealing"])
-        feature_importance_df = get_feature_importances(processed_df, columns['heating_load'])
 
-        if page == "Documentation and Explanation":
+        if 'pinn_model' not in st.session_state:
+            st.sidebar.title("HPWH Heating Load Prediction Application")
+            page = st.sidebar.radio("Navigation", ["Documentation",
+                                                  "Data Exploration Statistics",
+                                                  "Data Exploration Time Series Analysis",
+                                                  "Train Models",
+                                                  "Upload Models",
+                                                  "Genetic Algorithm", "Simulated Annealing"],
+                                    index=3)
+            feature_importance_df = get_feature_importances(processed_df, columns['heating_load'])
+
+            if st.sidebar.button("Go back"):
+                go_back("full_columns_selected")
+
+        if page == "Documentation":
             show_documentation_before_process_models()
 
         elif page == "Data Exploration Statistics":
@@ -151,6 +214,7 @@ if 'columns_selected' in st.session_state:
         elif page == "Upload Models":
             show_upload_models()
         elif page == "Genetic Algorithm":
+            st.title("Genetic Algorithm for Hyperparameter Tuning")
             show_genetic_algorithm(processed_df, columns['heating_load'])
         elif page == "Simulated Annealing":
             show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'], columns['inlet_temp'], columns['water_flow'])
@@ -161,14 +225,18 @@ if 'columns_selected' in st.session_state:
         pinn_model = st.session_state['pinn_model']
         feature_importance_df = get_feature_importances(processed_df, columns['heating_load'])
 
-        st.sidebar.title("Navigation")
-        page = st.sidebar.radio("Go to", ["Documentation and Explanation",
+        st.sidebar.title("HPWH Heating Load Prediction Application")
+        page = st.sidebar.radio("Navigation", ["Documentation",
                                           "Data Exploration Statistics",
                                           "Data Exploration Time Series Analysis",
                                           "Interactive Model Comparison",
                                           "Performance Metrics", "Interactive Data Filtering",
-                                          "Genetic Algorithm", "Simulated Annealing"])
-        if page == "Documentation and Explanation":
+                                          "Genetic Algorithm", "Simulated Annealing"],
+                                index=4)
+        if st.sidebar.button("Go back"):
+            go_back("models_trained_uploaded")
+
+        if page == "Documentation":
             show_documentation_full()
 
         elif page == "Data Exploration Statistics":
@@ -191,6 +259,7 @@ if 'columns_selected' in st.session_state:
         elif page == "Interactive Data Filtering":
             show_interactive_data_filtering(processed_df, classic_model, pinn_model, columns['heating_load'])
         elif page == "Genetic Algorithm":
+            st.title("Genetic Algorithm for Hyperparameter Tuning")
             show_genetic_algorithm(processed_df, columns['heating_load'])
         elif page == "Simulated Annealing":
             show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'], columns['inlet_temp'], columns['water_flow'])
@@ -207,14 +276,14 @@ if 'selected_dataset' in st.session_state:
         print(f"Error processing data or loading models: {e}")
         reset_state_and_prompt()
 
-    st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["Documentation and Explanation",
+    st.sidebar.title("HPWH Heating Load Prediction Application")
+    page = st.sidebar.radio("Navigation", ["Documentation",
                                       "Data Exploration Statistics", "Data Exploration Time Series Analysis",
                                       "Interactive Model Comparison", "Interactive Model Comparison with Physics",
                                       "Performance Metrics", "Interactive Data Filtering",
                                       "Genetic Algorithm", "Simulated Annealing"])
 
-    if page == "Documentation and Explanation":
+    if page == "Documentation":
         show_documentation_full()
 
     elif page == "Data Exploration Statistics":
@@ -240,3 +309,7 @@ if 'selected_dataset' in st.session_state:
         show_simulated_annealing(initial_df)
     else:
         st.write("Not implemented yet")
+
+    if st.sidebar.button("Go back"):
+        go_back("selected_dataset")
+

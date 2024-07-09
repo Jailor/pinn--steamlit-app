@@ -67,7 +67,7 @@ def train_and_evaluate_model(df, target_column, num_layers, neurons_per_layer, l
 
     # Train the model
     history = model.fit(X_train, y_train, validation_split=validation_split,
-                        epochs=epochs, batch_size=256,
+                        epochs=epochs, batch_size=max(256, batch_size),
                         callbacks=[early_stopping, model_checkpoint, lr_scheduler, custom_callback])
 
     # Load the best model
@@ -95,7 +95,8 @@ def train_and_evaluate_physics_model(df, target_column, num_layers, neurons_per_
                                      optimizer_name, activation_function, epochs, batch_size, validation_split,
                                      train_test_size,
                                      progress_bar, status_text, log_text, log_file_path):
-    alpha = 0.089
+    alpha = 0.0899197906255722
+    lambda_reg = 0.0001
 
     def pinn_loss(y_true_with_features, y_pred):
         y_true = y_true_with_features[:, 0:1]
@@ -111,7 +112,10 @@ def train_and_evaluate_physics_model(df, target_column, num_layers, neurons_per_
         inlet_temp_c = fahrenheit_to_celsius(inlet_temp)
         outlet_temp_c = fahrenheit_to_celsius(outlet_water_temp)
         heat_output = water_flow * (outlet_water_temp - inlet_temp) * 0.997 * 8.3077
-        return tf.reduce_mean(tf.abs(y_true - y_pred) + alpha * tf.abs(heat_output - y_pred), axis=-1)
+        reg_loss = tf.reduce_sum([tf.nn.l2_loss(v) for v in model.trainable_weights])
+
+        return tf.reduce_mean(tf.abs(y_true - y_pred) + alpha * tf.abs(heat_output - y_pred) + lambda_reg * reg_loss,
+                              axis=-1)
 
     # Prepare the data
     X = df.drop(columns=[target_column])
@@ -203,14 +207,13 @@ class StreamlitProgressBar(Callback):
             self.log_text.text_area("Training Log", full_log_message, height=400, max_chars=None)
 
 
-
 @st.cache_resource
 def load_models():
-
     standard_model = load_model('models/classic_full.h5')
     pinn_model = load_model('models/pinn_full.h5', custom_objects={'pinn_loss': pinn_loss}, compile=False)
 
     return standard_model, pinn_model
+
 
 @st.cache_resource
 def load_simplified_models():
@@ -220,8 +223,9 @@ def load_simplified_models():
 
     return standard_model, pinn_model
 
+
 def pinn_loss(y_true_with_features, y_pred):
-        pass
+    pass
 
 
 def reset_state_and_prompt():
@@ -332,16 +336,17 @@ def get_most_similar_column(target, columns):
 
 
 def prompt_user_for_columns(df):
-    st.title('New Dataset Detected')
+    st.title('Process Dataset')
     st.subheader("Dataset Columns")
     st.markdown("""
             Please select the columns to keep and map the necessary columns for the analysis. The kept columns must necessarily match 
              at least the following columns in order to apply physics-informed machine learning for heating load:
-              - **water flow** => The amount of water entering the HPWH system.
-              - **outlet water temp** => The temperature of the water leaving the HPWH system.
-              - **inlet temp** => The temperature of the water entering the HPWH system.
-              - **timestamp** => The timestamp of the data. Should be in format 'YYYY-MM-DD HH:MM:SS'.
-              - **heating load** => The heating load of the HPWH system.
+              - **water flow** => The amount of water entering the HPWH system
+              - **outlet water temp** => The temperature of the water leaving the HPWH system
+              - **inlet temp** => The temperature of the water entering the HPWH system
+              - **timestamp** => The timestamp of the data. Should be in format YYYY-MM-DD HH:MM:SS
+              - **heating load** => The heating load of the HPWH system \n
+            After this step, you will be able to upload/train models and view performance metrics.
               """)
 
     columns_to_keep = st.multiselect("Select columns to keep (Minimum 5)", options=df.columns,
@@ -424,8 +429,11 @@ def process_new_dataset(df, water_flow_column, outlet_water_temp_column, inlet_t
 
 
 def prompt_user_for_partial_columns(df):
-    st.title('New Dataset Detected')
-    st.write("Please select the columns for time stamp and for the heating load.")
+    st.title('Map Timestamp and Heating Load Columns')
+    st.write("The form below requires you to choose the columns that represent the timestamp of each entry in your "
+             "dataset (must necessarily be a date-time column of format YYYY-MM-DD HH:MM:SS and the column that "
+             "represents the heating load of the HPWH system. The application will then transition and offer dataset"
+             "processing and statistics.")
 
     # Find the most similar column names
     columns = df.columns.tolist()
@@ -470,54 +478,177 @@ def prompt_user_for_partial_columns(df):
 
 
 def show_train_models(processed_df, columns):
-    st.header("Hyperparameters")
-    st.write("Choose the hyperparameters for training the models:")
-    num_layers = st.slider("Number of Layers", 1, 10, 2)
-    neurons_per_layer = st.number_input("Neurons per Layer", 5, 1024, 227, help="Between 5 and 1024")
-    learning_rate = st.number_input("Learning Rate", 0.00001, 10.00, 0.0009323, format="%.6f",
-                                    help="Between 0.00001 and 10.00")
-    optimizer_name = st.selectbox("Optimizer", ["Adam", "SGD", "RMSprop"])
-    activation_function = st.selectbox("Activation Function", ["relu", "sigmoid", "tanh"])
-    epochs = st.number_input("Epochs", 10, 1000, 100, help="Between 10 and 1000")
-    batch_size = st.number_input("Batch Size", 16, 1024, 64, help="Between 16 and 1024")
-    validation_split = st.slider("Reserved for Validation", 0.1, 0.4, 0.2)
-    train_test_size = st.slider("Reserved for Testing", 0.1, 0.4, 0.2)
+    st.title("Train Models and tune hyperparameters")
+    method = st.selectbox("Select Training Method",
+                          ["Choose Own Hyperparameters", "Use Optimal Config", "Run Genetic Algorithm"])
 
+    # Variables to store models
     classic_model = None
     pinn_model = None
+    if method == "Choose Own Hyperparameters":
+        st.header("Choose Hyperparameters")
+        st.write("Choose the hyperparameters for training the models. The default values "
+                 "are those values found optimal by the genetic algorithm on the Rossland Site 1 E350 dataset.")
+        num_layers = st.slider("Number of Layers", 1, 10, 2)
+        neurons_per_layer = st.number_input("Neurons per Layer", 5, 1024, 227, help="Between 5 and 1024")
+        learning_rate = st.number_input("Learning Rate", 0.00001, 10.00, 0.0009323, format="%.6f",
+                                        help="Between 0.00001 and 10.00")
+        optimizer_name = st.selectbox("Optimizer", ["Adam", "SGD", "RMSprop"])
+        activation_function = st.selectbox("Activation Function", ["relu", "sigmoid", "tanh"])
+        epochs = st.number_input("Epochs", 10, 1000, 100, help="Between 10 and 1000")
+        batch_size = st.number_input("Batch Size", 16, 1024, 64, help="Between 16 and 1024")
+        validation_split = st.slider("Reserved for Validation", 0.1, 0.4, 0.2)
+        train_test_size = st.slider("Reserved for Testing", 0.1, 0.4, 0.2)
 
-    if 'model' not in st.session_state and st.button("Train Mdoels"):
+        submitted = False
+
+        if st.button("Train Mdoels"):
+            st.write("Training classic model...")
+            classic_progress_bar = st.progress(0)
+            classic_status_text = st.empty()
+            classic_log_text = st.empty()
+
+            classic_model = train_and_evaluate_model(processed_df, columns['heating_load'], num_layers,
+                                                     neurons_per_layer,
+                                                     learning_rate, optimizer_name, activation_function, epochs,
+                                                     batch_size, validation_split, train_test_size,
+                                                     classic_progress_bar, classic_status_text,
+                                                     classic_log_text, "logs/classic_model.log")
+
+            st.write("Finished training classic model.")
+
+            st.write("Training PINN model...")
+            pinn_progress_bar = st.progress(0)
+            pinn_status_text = st.empty()
+            pinn_log_text = st.empty()
+            pinn_model = train_and_evaluate_physics_model(processed_df, columns['heating_load'], num_layers,
+                                                          neurons_per_layer,
+                                                          learning_rate, optimizer_name, activation_function,
+                                                          epochs, batch_size, validation_split, train_test_size,
+                                                          pinn_progress_bar, pinn_status_text, pinn_log_text,
+                                                          "logs/pinn_model.log")
+            st.write("Finished training PINN model.")
+            st.session_state['model'] = classic_model
+            st.session_state['pinn_model'] = pinn_model
+            submitted = st.button("Continue")
+            if submitted:
+                st.rerun()
+    elif method == "Use Optimal Config":
+        st.header("Use Optimal Configuration")
+        st.write("Using the best configuration for training the models as determined by the genetic algorithm using"
+                 "20 generations on the Rossland Site 1 E350 dataset.")
+        st.write("The configuration is as follows:")
+        best_config_df = pd.DataFrame({
+            "Hyperparameter": ["Number of Layers", "Neurons per Layer", "Learning Rate", "Optimizer",
+                               "Activation Function", "Epochs", "Batch Size", "Validation Split", "Train/Test Split"],
+            "Value": [2, 227, 0.0009323, "Adam", "relu", 100, 64, 0.2, 0.2]
+        })
+
+        st.table(best_config_df)
+
+        num_layers = 2
+        neurons_per_layer = 227
+        learning_rate = 0.0009323
+        optimizer_name = "Adam"
+        activation_function = "relu"
+        epochs = 100
+        batch_size = 64
+        validation_split = 0.2
+        train_test_size = 0.2
+
+        if st.button("Train Mdoels"):
+            st.write("Training classic model...")
+            classic_progress_bar = st.progress(0)
+            classic_status_text = st.empty()
+            classic_log_text = st.empty()
+
+            classic_model = train_and_evaluate_model(processed_df, columns['heating_load'], num_layers,
+                                                     neurons_per_layer,
+                                                     learning_rate, optimizer_name, activation_function, epochs,
+                                                     batch_size, validation_split, train_test_size,
+                                                     classic_progress_bar, classic_status_text,
+                                                     classic_log_text, "logs/classic_model.log")
+
+            st.write("Finished training classic model.")
+
+            st.write("Training PINN model...")
+            pinn_progress_bar = st.progress(0)
+            pinn_status_text = st.empty()
+            pinn_log_text = st.empty()
+            pinn_model = train_and_evaluate_physics_model(processed_df, columns['heating_load'], num_layers,
+                                                          neurons_per_layer,
+                                                          learning_rate, optimizer_name, activation_function,
+                                                          epochs, batch_size, validation_split, train_test_size,
+                                                          pinn_progress_bar, pinn_status_text, pinn_log_text,
+                                                          "logs/pinn_model.log")
+            st.write("Finished training PINN model.")
+            st.session_state['model'] = classic_model
+            st.session_state['pinn_model'] = pinn_model
+            submitted = st.button("Continue")
+            if submitted:
+                st.rerun()
+    elif method == "Run Genetic Algorithm":
+        show_genetic_algorithm(processed_df, columns['heating_load'], True)
+
+
+def train_best_individual_ga(processed_df, columns):
+    if 'best_individual' in st.session_state and st.session_state['best_individual'] is not None:
         st.write("Training classic model...")
         classic_progress_bar = st.progress(0)
         classic_status_text = st.empty()
         classic_log_text = st.empty()
+        best_individual = st.session_state['best_individual']
 
-        classic_model = train_and_evaluate_model(processed_df, columns['heating_load'], num_layers,
-                                                 neurons_per_layer,
-                                                 learning_rate, optimizer_name, activation_function, epochs,
+
+        layers = best_individual["Layers"]
+        neurons = best_individual["Neurons"]
+        learning_rate = 10 ** best_individual["Learning Rate"]
+        optimizer = best_individual["Optimizer"]
+        activation = best_individual["Activation"]
+        epochs = 100
+        batch_size = 64
+        validation_split = 0.2
+        train_test_size = 0.2
+
+        best_config_df = pd.DataFrame({
+            "Hyperparameter": ["Number of Layers", "Neurons per Layer", "Learning Rate", "Optimizer",
+                               "Activation Function", "Epochs", "Batch Size", "Validation Split",
+                               "Train/Test Split"],
+            "Value": [layers, neurons, learning_rate, optimizer, activation, epochs, batch_size, validation_split,
+                      train_test_size]
+        })
+
+        st.write("The best configuration found by the genetic algorithm is as follows:")
+        st.table(best_config_df)
+
+        classic_model = train_and_evaluate_model(processed_df, columns['heating_load'], layers,
+                                                 neurons,
+                                                 learning_rate, optimizer, activation, epochs,
                                                  batch_size, validation_split, train_test_size,
                                                  classic_progress_bar, classic_status_text,
                                                  classic_log_text, "logs/classic_model.log")
 
-        st.session_state['model'] = classic_model
+        classic_progress_bar.progress(1.0)
+
         st.write("Finished training classic model.")
 
         st.write("Training PINN model...")
         pinn_progress_bar = st.progress(0)
         pinn_status_text = st.empty()
         pinn_log_text = st.empty()
-        pinn_model = train_and_evaluate_physics_model(processed_df, columns['heating_load'], num_layers,
-                                                      neurons_per_layer,
-                                                      learning_rate, optimizer_name, activation_function,
+        pinn_model = train_and_evaluate_physics_model(processed_df, columns['heating_load'], layers,
+                                                      neurons,
+                                                      learning_rate, optimizer, activation,
                                                       epochs, batch_size, validation_split, train_test_size,
                                                       pinn_progress_bar, pinn_status_text, pinn_log_text,
                                                       "logs/pinn_model.log")
-        st.session_state['pinn_model'] = pinn_model
         st.write("Finished training PINN model.")
-        if 'model' in st.session_state and 'pinn_model' in st.session_state:
-            if st.button("Continue"):
-                st.rerun()
-
+        st.session_state['model'] = classic_model
+        st.session_state['pinn_model'] = pinn_model
+        pinn_progress_bar.progress(1.0)
+        submitted = st.button("Continue")
+        if submitted:
+            st.rerun()
 
 def show_upload_models():
     st.title("Upload Models")
@@ -554,6 +685,7 @@ def show_upload_models():
 
         except Exception as e:
             st.error(f"Error loading models: {e}")
+
 
 def get_distances(standard_pred, pinn_pred, heat_output_physics):
     d1 = abs(standard_pred[0][0] - heat_output_physics[0])
@@ -620,6 +752,7 @@ def plot_fitness_evolution(best_fitness):
     plt.tight_layout()
     return plt.gcf()
 
+
 class GeneticAlgorithmProgress:
     def __init__(self, progress_bar, status_text, log_text, log_file_path, diversity_plot, fitness_plot):
         self.progress_bar = progress_bar
@@ -633,6 +766,7 @@ class GeneticAlgorithmProgress:
         self.logs = []
         self.most_recent_diversity_plot = None
         self.most_recent_fitness_plot = None
+        self.ga_completed = False
 
     def reset(self, total_generations):
         self.total_generations = total_generations
@@ -645,8 +779,9 @@ class GeneticAlgorithmProgress:
         self.fitness_plot.empty()
         self.most_recent_diversity_plot = None
         self.most_recent_fitness_plot = None
+        self.ga_completed = False
 
-    def on_generation_end(self, generation, logs,  population_diversity_plot, best_fitness_plot):
+    def on_generation_end(self, generation, logs, population_diversity_plot, best_fitness_plot):
         self.current_generation += 1
         progress = self.current_generation / self.total_generations
         self.progress_bar.progress(progress)
@@ -672,9 +807,11 @@ class GeneticAlgorithmProgress:
         self.fitness_plot.pyplot(best_fitness_plot)
         self.most_recent_diversity_plot = population_diversity_plot
         self.most_recent_fitness_plot = best_fitness_plot
-
+        st.session_state.best_individual_so_far = logs["Best individual"]
         if self.total_generations == self.current_generation:
+            st.session_state.best_individual = logs["Best individual"]
             self._save_logs()
+            self.ga_completed = True
 
     def on_user_end(self):
         self.status_text.text("Genetic Algorithm stopped by user at generation " + str(self.current_generation + 1))
@@ -684,7 +821,12 @@ class GeneticAlgorithmProgress:
         if self.most_recent_diversity_plot is not None and self.most_recent_fitness_plot is not None:
             self.diversity_plot.pyplot(self.most_recent_diversity_plot)
             self.fitness_plot.pyplot(self.most_recent_fitness_plot)
+        if 'best_individual_so_far' in st.session_state:
+            st.session_state.best_individual = st.session_state.best_individual_so_far
+        else:
+            st.session_state.best_individual = None
         self._save_logs()
+        self.ga_completed = True
 
     def _save_logs(self):
         with open(self.log_file_path, 'w') as log_file:
@@ -707,8 +849,8 @@ def is_valid(individual):
         return False
     return True
 
-def genetic_algorithm(df, NGEN, EPOCHS, POPULATION_SIZE, BATCH_SIZE, target_column = 'Water Heating Load (Btu)'):
 
+def genetic_algorithm(df, NGEN, EPOCHS, POPULATION_SIZE, BATCH_SIZE, target_column='Water Heating Load (Btu)'):
     X = df.drop(columns=[target_column])
     y = df[target_column]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -832,15 +974,17 @@ def genetic_algorithm(df, NGEN, EPOCHS, POPULATION_SIZE, BATCH_SIZE, target_colu
         population_diversity_plot = plot_population_diversity(population, gen)
         best_fitness_plot = plot_fitness_evolution(best_fitness)
 
-        st.session_state.progress_callback.on_generation_end(gen, log_data, population_diversity_plot, best_fitness_plot)
+        st.session_state.progress_callback.on_generation_end(gen, log_data, population_diversity_plot,
+                                                             best_fitness_plot)
 
-def show_genetic_algorithm(df, target_column = 'Water Heating Load (Btu)'):
-    st.title("Genetic Algorithm for Model Optimization")
-    st.write("Use the buttons below to start or stop the genetic algorithm.")
+
+def show_genetic_algorithm(df, target_column='Water Heating Load (Btu)', train_models = False):
+    st.write(
+        "Choose the hyperparameters of the genetic algorithm, then use buttons below to start or stop the genetic algorithm.")
 
     st.header("Genetic Algorithm Hyperparameters")
-    ngen = st.slider("Number of Generations (NGEN)", min_value=1, max_value=100, value=20)
-    population_size = st.slider("Population Size", min_value=1, max_value=100, value=20)
+    ngen = st.number_input("Number of Generations (NGEN)", 1, 100, 20, help="Between 1 and 100")
+    population_size = st.number_input("Population Size", 1, 100, 20, help="Between 1 and 100")
     epochs = st.number_input("Epochs", 5, 1000, 50, help="Between 5 and 1000")
     batch_size = st.number_input("Batch Size", 16, 1024, 128, help="Between 16 and 1024")
 
@@ -857,6 +1001,7 @@ def show_genetic_algorithm(df, target_column = 'Water Heating Load (Btu)'):
         st.session_state.stopGeneticAlgorithm = False
         st.session_state.progress_callback = \
             GeneticAlgorithmProgress(progress_bar, status_text, log_text, log_file_path, diversity_plot, fitness_plot)
+        st.session_state.best_individual = None
 
     start_button = st.button("Start Genetic Algorithm", disabled=False)
     stop_button = st.button("Stop Genetic Algorithm", disabled=False)
@@ -867,19 +1012,24 @@ def show_genetic_algorithm(df, target_column = 'Water Heating Load (Btu)'):
         progress_callback.reset(ngen)
         print("GA started")
         genetic_algorithm(df, ngen, epochs, population_size, batch_size, target_column)
+        if train_models and progress_callback.ga_completed:  # Check if GA has stopped
+            train_best_individual_ga(df, st.session_state['columns'])
 
     if stop_button:
         st.session_state.stopGeneticAlgorithm = True
         progress_callback = st.session_state.progress_callback
         progress_callback.on_user_end()
         print("GA stopped")
+        if train_models and progress_callback.ga_completed:  # Check if GA has completed
+            train_best_individual_ga(df, st.session_state['columns'])
 
 
-def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_water_temp_column, inlet_temp_column, water_flow_column,
+def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_water_temp_column, inlet_temp_column,
+                        water_flow_column,
                         progress_bar, status_text, log_text, log_file_path, alpha_plot, temperature_plot,
                         initial_alpha, initial_temp, cooling_rate, min_temp):
     class AlphaAdjustmentCallback(Callback):
-        def __init__(self,  progress_bar, status_text, log_text, log_file_path, epochs, alpha_plot, temperature_plot,
+        def __init__(self, progress_bar, status_text, log_text, log_file_path, epochs, alpha_plot, temperature_plot,
                      initial_alpha=5.0, initial_temp=50.0, cooling_rate=0.955, min_temp=5.0):
             super().__init__()
             self.alpha = tf.Variable(initial_alpha, dtype=tf.float32, trainable=False)
@@ -932,7 +1082,6 @@ def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_wate
             # self.log_text.text_area("Training Log", full_log_message, height=400, max_chars=None)
             self.log_text.text_area("Training Log", log_message, height=400, max_chars=None)
 
-
             self.alphas.append(tf.keras.backend.get_value(self.alpha))
             self.temperatures.append(self.temperature)
 
@@ -943,7 +1092,7 @@ def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_wate
                 self.log_text.text_area("Training Log", full_log_message, height=400, max_chars=None)
 
                 plt.figure(figsize=(10, 6))
-                plt.plot( np.arange(0, self.total_epochs + 1), self.alphas, label='Alpha')
+                plt.plot(np.arange(0, self.total_epochs + 1), self.alphas, label='Alpha')
                 plt.xlabel('Epochs')
                 plt.ylabel('Alpha')
                 plt.title('Dynamic Adjustment of Alpha Over Training Epochs')
@@ -962,12 +1111,11 @@ def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_wate
                 plt.grid(True)
                 self.temperature_plot.pyplot(plt.gcf())
 
-            print(f'Epoch {epoch + 1}: α updated to {tf.keras.backend.get_value(self.alpha)}, temperature to {self.temperature}')
-
+            print(
+                f'Epoch {epoch + 1}: α updated to {tf.keras.backend.get_value(self.alpha)}, temperature to {self.temperature}')
 
     X = df.drop(columns=[heating_load_column])
     y = df[heating_load_column]
-
 
     outlet_water_temp = X.iloc[:, X.columns.get_loc(outlet_water_temp_column)].to_numpy().reshape(-1, 1)
     inlet_temp = X.iloc[:, X.columns.get_loc(inlet_temp_column)].to_numpy().reshape(-1, 1)
@@ -1000,7 +1148,8 @@ def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_wate
             reg_loss = tf.reduce_sum([tf.nn.l2_loss(v) for v in model.trainable_weights])
 
             heat_output = flow_rate_liters * (outlet_temp_c - inlet_temp_c) * specific_heat_capacity * joules_to_btu
-            return tf.reduce_mean(tf.abs(y_true - y_pred) + current_alpha * tf.abs(heat_output - y_pred) + lambda_reg * reg_loss, axis=-1)
+            return tf.reduce_mean(
+                tf.abs(y_true - y_pred) + current_alpha * tf.abs(heat_output - y_pred) + lambda_reg * reg_loss, axis=-1)
 
         return loss
 
@@ -1009,10 +1158,11 @@ def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_wate
     model.add(Dense(227, activation='relu'))
     model.add(Dense(1, activation='linear'))
 
-    alpha_adjust_callback = AlphaAdjustmentCallback( progress_bar, status_text, log_text, log_file_path, epochs,
-                                                     alpha_plot, temperature_plot,
-                                                     initial_alpha, initial_temp, cooling_rate, min_temp)
-    model.compile(optimizer=Adam(learning_rate=0.0009323), loss=custom_loss(alpha_adjust_callback.alpha), metrics=['mae'], run_eagerly=True)
+    alpha_adjust_callback = AlphaAdjustmentCallback(progress_bar, status_text, log_text, log_file_path, epochs,
+                                                    alpha_plot, temperature_plot,
+                                                    initial_alpha, initial_temp, cooling_rate, min_temp)
+    model.compile(optimizer=Adam(learning_rate=0.0009323), loss=custom_loss(alpha_adjust_callback.alpha),
+                  metrics=['mae'], run_eagerly=True)
     # Callbacks
     lr_scheduler = ReduceLROnPlateau(factor=0.66, patience=5)
     early_stopping = EarlyStopping(monitor='val_loss', patience=20)
@@ -1048,8 +1198,13 @@ def simulated_annealing(df, epochs, batch_size, heating_load_column, outlet_wate
     st.write(f"Mean Absolute Error: {mae}")
     st.write(f"Mean Absolute Percentage Error: {mape}%")
 
-def show_simulated_annealing(df, heating_load_column='Water Heating Load (Btu)', outlet_water_temp_column='Hot Water Temp (F)',
-                                inlet_temp_column='Inlet Temp (F)', water_flow_column='Water Flow (Gallons)'):
+
+def show_simulated_annealing(df, heating_load_column='Water Heating Load (Btu)',
+                             outlet_water_temp_column='Hot Water Temp (F)',
+                             inlet_temp_column='Inlet Temp (F)', water_flow_column='Water Flow (Gallons)'):
+    st.title("Simulated Annealing for Hyperparameter Tuning")
+    st.write(
+        "Choose the hyperparameters of the simulated annealing algorithm and then click the button to start the training.")
     epochs = st.number_input("Epochs", 5, 1000, 10, help="Between 5 and 1000")
     batch_size = st.number_input("Batch Size", 16, 1024, 128, help="Between 16 and 1024")
     initial_alpha = st.number_input("Initial Alpha", 0.1, 10.0, 5.0, help="Between 0.1 and 10.0")

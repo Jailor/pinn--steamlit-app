@@ -103,6 +103,7 @@ def show_data_exploration_statistics(initial_df, feature_importance_df):
 
 
 def show_data_exploration_time_series_analysis_generic(initial_df):
+    st.title('Data Exploration - Time Series Analysis')
     columns = initial_df.columns
     with st.expander('Time Series Analysis (Weekly Aggregated)', expanded=True):
         initial_df_resampled = initial_df.resample('W').mean()
