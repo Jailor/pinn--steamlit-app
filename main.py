@@ -1,5 +1,6 @@
 import os
-import threading
+
+from my_pages.genetic_algorithm import show_genetic_algorithm
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import streamlit as st
@@ -13,7 +14,6 @@ import tensorflow as tf
 import keras
 from threading import Lock
 import time
-import keras.backend as K
 from keras.models import load_model
 from keras.models import Sequential
 from keras.layers import Dense
@@ -22,6 +22,14 @@ from keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint, C
 from sklearn.model_selection import train_test_split, KFold, cross_validate
 from sklearn.metrics import root_mean_squared_error, mean_squared_error, r2_score, mean_absolute_error, \
     mean_absolute_percentage_error
+
+from data_loading_processing import load_existing_datasets, load_data, process_existing_dataset, \
+    prompt_user_for_partial_columns, prompt_user_for_columns, process_new_dataset, get_feature_importances
+from models.model_loading_training import load_models, load_simplified_models
+from my_pages.helpers.view_helpers import reset_state_and_prompt, go_back
+from my_pages.model_training import show_train_models
+from my_pages.simulated_annealing import show_simulated_annealing
+from my_pages.upload_models import show_upload_models
 from my_pages.documentation import show_documentation_full, show_documentation_before_process_dataset, \
     show_documentation_before_process_models, show_documentation_initial
 from my_pages.data_exploration import show_data_exploration_statistics, \
@@ -32,48 +40,13 @@ from my_pages.interactive_model_comparison import show_interactive_model_compari
 from my_pages.interactive_model_comparison_with_physics import show_interactive_model_comparison_with_physics, \
     show_interactive_model_comparison_with_physics_generic
 from my_pages.performance_metrics import show_performance_metrics
-from common import load_models, load_data, pinn_loss, get_feature_importances, \
-    load_simplified_models, prompt_user_for_columns, process_new_dataset, train_and_evaluate_physics_model, \
-    train_and_evaluate_model, reset_state_and_prompt, load_existing_datasets, process_existing_dataset, \
-    prompt_user_for_partial_columns, show_train_models, show_upload_models, GeneticAlgorithmProgress, genetic_algorithm, \
-    show_genetic_algorithm, simulated_annealing, show_simulated_annealing
 
 st.set_page_config(
     page_title="HPWH Heating Load Prediction Application",
     page_icon=":zap:",
 )
 
-
-def go_back(current_tab: str):
-    if current_tab == "uploaded_file":
-        st.session_state.pop('uploaded_file')
-    elif current_tab == "selected_dataset":
-        st.session_state.pop('selected_dataset')
-    elif current_tab == "partial_columns_selected":
-        st.session_state.pop('filtered_df_initial')
-        st.session_state.pop('timestamp_column')
-        st.session_state.pop('heating_load_column')
-    elif current_tab == "full_columns_selected":
-        st.session_state.pop('filtered_df')
-        st.session_state.pop('processed_df')
-        st.session_state.pop('columns')
-        st.session_state.pop('columns_selected')
-        if 'best_individual' in st.session_state:
-            st.session_state.pop('best_individual')
-        if 'best_individual_so_far' in st.session_state:
-            st.session_state.pop('best_individual_so_far')
-    elif current_tab == "models_trained_uploaded":
-        st.session_state.pop('model')
-        st.session_state.pop('pinn_model')
-        if 'best_individual' in st.session_state:
-            st.session_state.pop('best_individual')
-        if 'best_individual_so_far' in st.session_state:
-            st.session_state.pop('best_individual_so_far')
-
-    st.rerun()
-
 load_existing_datasets()
-
 
 if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.session_state:
     st.sidebar.title("HPWH Heating Load Prediction Application")
@@ -148,9 +121,9 @@ if 'uploaded_file' in st.session_state and 'initial_df' in st.session_state:
         filtered_df = st.session_state['filtered_df_initial']
         st.sidebar.title("HPWH Heating Load Prediction Application")
         page = st.sidebar.radio("Navigation", ["Documentation",
-                                              "Data Exploration Statistics",
-                                              "Data Exploration Time Series Analysis",
-                                              "Process Dataset"],
+                                               "Data Exploration Statistics",
+                                               "Data Exploration Time Series Analysis",
+                                               "Process Dataset"],
                                 index=1)
         if st.sidebar.button("Go back"):
             go_back("partial_columns_selected")
@@ -169,8 +142,6 @@ if 'uploaded_file' in st.session_state and 'initial_df' in st.session_state:
         else:
             st.write("Not implemented yet")
 
-
-
 if 'columns_selected' in st.session_state:
     columns = st.session_state['columns']
 
@@ -188,11 +159,11 @@ if 'columns_selected' in st.session_state:
         if 'pinn_model' not in st.session_state:
             st.sidebar.title("HPWH Heating Load Prediction Application")
             page = st.sidebar.radio("Navigation", ["Documentation",
-                                                  "Data Exploration Statistics",
-                                                  "Data Exploration Time Series Analysis",
-                                                  "Train Models",
-                                                  "Upload Models",
-                                                  "Genetic Algorithm", "Simulated Annealing"],
+                                                   "Data Exploration Statistics",
+                                                   "Data Exploration Time Series Analysis",
+                                                   "Train Models",
+                                                   "Upload Models",
+                                                   "Genetic Algorithm", "Simulated Annealing"],
                                     index=3)
             feature_importance_df = get_feature_importances(processed_df, columns['heating_load'])
 
@@ -217,7 +188,8 @@ if 'columns_selected' in st.session_state:
             st.title("Genetic Algorithm for Hyperparameter Tuning")
             show_genetic_algorithm(processed_df, columns['heating_load'])
         elif page == "Simulated Annealing":
-            show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'], columns['inlet_temp'], columns['water_flow'])
+            show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'],
+                                     columns['inlet_temp'], columns['water_flow'])
         else:
             st.write("Not implemented yet")
     else:
@@ -227,11 +199,11 @@ if 'columns_selected' in st.session_state:
 
         st.sidebar.title("HPWH Heating Load Prediction Application")
         page = st.sidebar.radio("Navigation", ["Documentation",
-                                          "Data Exploration Statistics",
-                                          "Data Exploration Time Series Analysis",
-                                          "Interactive Model Comparison",
-                                          "Performance Metrics", "Interactive Data Filtering",
-                                          "Genetic Algorithm", "Simulated Annealing"],
+                                               "Data Exploration Statistics",
+                                               "Data Exploration Time Series Analysis",
+                                               "Interactive Model Comparison",
+                                               "Performance Metrics", "Interactive Data Filtering",
+                                               "Genetic Algorithm", "Simulated Annealing"],
                                 index=4)
         if st.sidebar.button("Go back"):
             go_back("models_trained_uploaded")
@@ -262,7 +234,8 @@ if 'columns_selected' in st.session_state:
             st.title("Genetic Algorithm for Hyperparameter Tuning")
             show_genetic_algorithm(processed_df, columns['heating_load'])
         elif page == "Simulated Annealing":
-            show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'], columns['inlet_temp'], columns['water_flow'])
+            show_simulated_annealing(processed_df, columns['heating_load'], columns['outlet_water_temp'],
+                                     columns['inlet_temp'], columns['water_flow'])
         else:
             st.write("Not implemented yet")
 
@@ -278,10 +251,10 @@ if 'selected_dataset' in st.session_state:
 
     st.sidebar.title("HPWH Heating Load Prediction Application")
     page = st.sidebar.radio("Navigation", ["Documentation",
-                                      "Data Exploration Statistics", "Data Exploration Time Series Analysis",
-                                      "Interactive Model Comparison", "Interactive Model Comparison with Physics",
-                                      "Performance Metrics", "Interactive Data Filtering",
-                                      "Genetic Algorithm", "Simulated Annealing"])
+                                           "Data Exploration Statistics", "Data Exploration Time Series Analysis",
+                                           "Interactive Model Comparison", "Interactive Model Comparison with Physics",
+                                           "Performance Metrics", "Interactive Data Filtering",
+                                           "Genetic Algorithm", "Simulated Annealing"])
 
     if page == "Documentation":
         show_documentation_full()
@@ -312,4 +285,3 @@ if 'selected_dataset' in st.session_state:
 
     if st.sidebar.button("Go back"):
         go_back("selected_dataset")
-

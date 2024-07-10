@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import time
 
-from common import get_distances
+from models.model_loading_training import get_distances
 
 
 def show_interactive_model_comparison_with_physics(standard_model, pinn_model):
