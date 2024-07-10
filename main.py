@@ -1,6 +1,7 @@
 import os
 
 from my_pages.genetic_algorithm import show_genetic_algorithm
+from my_pages.interactive_model_comparison_with_physics import show_interactive_model_comparison_with_physics_generic
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import streamlit as st
@@ -37,8 +38,6 @@ from my_pages.data_exploration import show_data_exploration_statistics, \
 from my_pages.interactive_data_filtering import show_interactive_data_filtering
 from my_pages.interactive_model_comparison import show_interactive_model_comparison, \
     show_interactive_model_comparison_generic
-from my_pages.interactive_model_comparison_with_physics import show_interactive_model_comparison_with_physics, \
-    show_interactive_model_comparison_with_physics_generic
 from my_pages.performance_metrics import show_performance_metrics
 
 st.set_page_config(
@@ -50,14 +49,14 @@ load_existing_datasets()
 
 if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.session_state:
     st.sidebar.title("HPWH Heating Load Prediction Application")
-    page = st.sidebar.radio("Navigation", ["Documentation", "Upload or select Dataset"])
+    page = st.sidebar.radio("Navigation", ["Documentation", "Upload Dataset"])
 
     if page == "Documentation":
         show_documentation_initial()
-    elif page == "Upload or select Dataset":
-        st.title('Upload or select Dataset')
+    elif page == "Upload Dataset":
+        st.title('Upload Dataset')
         st.markdown("""
-               Upload a new time-series dataset or choose an existing one from the list. The dataset must necessarily
+               Upload a new time-series dataset to start. The dataset must necessarily
                contain a column representing the timestamp and a column representing the heating load of the HPWH. After
                uploading, the application will guide you through the process of selecting the
                relevant columns for the analysis.
@@ -70,10 +69,6 @@ if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.sess
         with st.form("initial_upload_file_form", clear_on_submit=True):
             uploaded_file = st.file_uploader("Choose a CSV file", type="csv", key="initial_file_uploader")
             submitted = st.form_submit_button("Upload")
-
-        st.header("Or select an existing dataset:")
-        selected_dataset = st.selectbox("Select a dataset", list(st.session_state['datasets'].keys()))
-        submitted_select = st.button("Select")
 
         if st.session_state.get('error_message'):
             st.error(st.session_state['error_message'])
@@ -91,19 +86,6 @@ if 'uploaded_file' not in st.session_state and 'selected_dataset' not in st.sess
                 print(f"Error loading data: {e}")
                 reset_state_and_prompt()
 
-        # If an existing dataset is selected, save it in the session state
-        if submitted_select and selected_dataset is not None:
-            try:
-                print(f"Selected dataset: {selected_dataset}")
-                initial_df = st.session_state['datasets'][selected_dataset]
-                initial_df = process_existing_dataset(initial_df, selected_dataset)
-                st.session_state['initial_df'] = initial_df
-                st.session_state['selected_dataset'] = selected_dataset
-                # st.session_state['is_new_dataset'] = False
-                st.rerun()
-            except Exception as e:
-                print(f"Error loading data: {e}")
-                reset_state_and_prompt()
     else:
         st.write("Not implemented yet")
 
@@ -202,9 +184,10 @@ if 'columns_selected' in st.session_state:
                                                "Data Exploration Statistics",
                                                "Data Exploration Time Series Analysis",
                                                "Interactive Model Comparison",
+                                               "Interactive Model Comparison with Physics",
                                                "Performance Metrics", "Interactive Data Filtering",
                                                "Genetic Algorithm", "Simulated Annealing"],
-                                index=4)
+                                index=5)
         if st.sidebar.button("Go back"):
             go_back("models_trained_uploaded")
 
@@ -220,10 +203,8 @@ if 'columns_selected' in st.session_state:
         elif page == "Interactive Model Comparison":
             show_interactive_model_comparison_generic(classic_model, pinn_model, processed_df)
 
-        # todo: train and evaluate the simplified models
         elif page == "Interactive Model Comparison with Physics":
-            st.write("Not implemented yet")
-            # show_interactive_model_comparison_with_physics_generic(classic_model, pinn_model)
+            show_interactive_model_comparison_with_physics_generic(processed_df, classic_model, pinn_model)
 
         elif page == "Performance Metrics":
             show_performance_metrics(processed_df, classic_model, pinn_model, columns['heating_load'])
@@ -239,49 +220,3 @@ if 'columns_selected' in st.session_state:
         else:
             st.write("Not implemented yet")
 
-if 'selected_dataset' in st.session_state:
-    try:
-        initial_df = st.session_state['initial_df']
-        standard_model, pinn_model = load_models()
-        standard_model_simple, pinn_model_simple = load_simplified_models()
-        feature_importance_df = get_feature_importances(initial_df)
-    except Exception as e:
-        print(f"Error processing data or loading models: {e}")
-        reset_state_and_prompt()
-
-    st.sidebar.title("HPWH Heating Load Prediction Application")
-    page = st.sidebar.radio("Navigation", ["Documentation",
-                                           "Data Exploration Statistics", "Data Exploration Time Series Analysis",
-                                           "Interactive Model Comparison", "Interactive Model Comparison with Physics",
-                                           "Performance Metrics", "Interactive Data Filtering",
-                                           "Genetic Algorithm", "Simulated Annealing"])
-
-    if page == "Documentation":
-        show_documentation_full()
-
-    elif page == "Data Exploration Statistics":
-        show_data_exploration_statistics(initial_df, feature_importance_df)
-
-    elif page == "Data Exploration Time Series Analysis":
-        show_data_exploration_time_series_analysis_generic(initial_df)
-
-    elif page == "Interactive Model Comparison":
-        show_interactive_model_comparison(standard_model, pinn_model)
-
-    elif page == "Interactive Model Comparison with Physics":
-        show_interactive_model_comparison_with_physics(standard_model_simple, pinn_model_simple)
-
-    elif page == "Performance Metrics":
-        show_performance_metrics(initial_df, standard_model, pinn_model)
-
-    elif page == "Interactive Data Filtering":
-        show_interactive_data_filtering(initial_df, standard_model, pinn_model)
-    elif page == "Genetic Algorithm":
-        show_genetic_algorithm(initial_df)
-    elif page == "Simulated Annealing":
-        show_simulated_annealing(initial_df)
-    else:
-        st.write("Not implemented yet")
-
-    if st.sidebar.button("Go back"):
-        go_back("selected_dataset")

@@ -4,8 +4,6 @@ import streamlit as st
 def go_back(current_tab: str):
     if current_tab == "uploaded_file":
         st.session_state.pop('uploaded_file')
-    elif current_tab == "selected_dataset":
-        st.session_state.pop('selected_dataset')
     elif current_tab == "partial_columns_selected":
         st.session_state.pop('filtered_df_initial')
         st.session_state.pop('timestamp_column')

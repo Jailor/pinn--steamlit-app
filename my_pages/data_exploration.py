@@ -156,9 +156,15 @@ def show_data_exploration_time_series_analysis_generic(initial_df):
 
 def show_data_exploration_statistics_generic(initial_df, feature_importance_df=None):
     st.title('Data Exploration')
+    
+    summary_df = initial_df.describe()
+
+    summary_df.rename(index={'50%': 'median'}, inplace=True)
+
+    summary_df.drop(index=['25%', '75%'], inplace=True)
 
     st.subheader('Dataset Summary')
-    st.write(initial_df.describe())
+    st.write(summary_df)
 
     st.subheader('Correlation Matrix')
     corr_matrix = initial_df.corr()

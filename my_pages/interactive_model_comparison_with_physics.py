@@ -59,7 +59,7 @@ def show_interactive_model_comparison_with_physics(standard_model, pinn_model):
     st.plotly_chart(fig)
 
 
-def show_interactive_model_comparison_with_physics_generic(standard_model, pinn_model):
+def show_interactive_model_comparison_with_physics_generic(processed_df, standard_model, pinn_model):
     # Input parameters
     st.title('Heat Pump Power Prediction and Physics')
     st.sidebar.header('Input Parameters')
@@ -67,14 +67,21 @@ def show_interactive_model_comparison_with_physics_generic(standard_model, pinn_
     columns = st.session_state['columns']
 
     def user_input_features():
-        water_flow = st.sidebar.number_input(columns['water_flow'], value=1.0)
-        inlet_temp = st.sidebar.number_input(columns['inlet_temp'],
-                                             value=60.0)  # inlet temperature of the water in the formula
-        outlet_temp = st.sidebar.number_input(columns['outlet_water_temp'],
-                                              value=140.0)  # outlet temperature of the water in the formula
-        data = {columns['outlet_water_temp']: outlet_temp,
-                columns['water_flow']: water_flow,
-                columns['inlet_temp']: inlet_temp}
+        data = {}
+        for col in processed_df.columns:
+            if col not in [columns['heating_load'], columns['timestamp']]:
+                default_value = processed_df[col].mean()
+                if col == columns['water_flow']:
+                    default_value = 3.0
+                elif col == columns['inlet_temp']:
+                    default_value = 60.0
+                elif col == columns['outlet_water_temp']:
+                    default_value = 140.0
+                if col in [columns['water_flow'], columns['inlet_temp'], columns['outlet_water_temp']]:
+                    data[col] = st.sidebar.number_input(col, value=default_value)
+                else:
+                    data[col] = default_value
+
         features = pd.DataFrame(data, index=[0])
         return features
 

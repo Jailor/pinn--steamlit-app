@@ -85,5 +85,3 @@ def model_explanation():
            - This ensures that the predictions made by the PINN are not only fitting the data but also adhering to the underlying physical principles.
            """
                 )
-    st.image("img/architecture.png", caption="Architecture of the HPWH Heating Load Prediction Application",
-             use_column_width=True)

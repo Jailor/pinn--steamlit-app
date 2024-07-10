@@ -61,7 +61,7 @@ def show_interactive_model_comparison_generic(standard_model, pinn_model, proces
         columns = st.session_state['columns']
         for col in processed_df.columns:
             if col not in [columns['heating_load'], columns['timestamp']]:
-                default_value = 0.0
+                default_value = processed_df[col].mean()
                 if col == columns['water_flow']:
                     default_value = 3.0
                 elif col == columns['inlet_temp']:
