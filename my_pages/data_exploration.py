@@ -156,7 +156,6 @@ def show_data_exploration_time_series_analysis_generic(initial_df):
 
 def show_data_exploration_statistics_generic(initial_df, feature_importance_df=None):
     st.title('Data Exploration')
-    
     summary_df = initial_df.describe()
 
     summary_df.rename(index={'50%': 'median'}, inplace=True)
