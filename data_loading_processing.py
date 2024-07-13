@@ -136,35 +136,38 @@ def prompt_user_for_columns(df):
     default_heating_load_column = get_most_similar_column("heating load", columns_to_keep)
 
     submitted = False
-    with st.form("column_mapping"):
-        water_flow_column = st.selectbox("Select the column for water flow", options=columns_to_keep,
-                                         index=columns_to_keep.index(
-                                             default_water_flow_column) if default_water_flow_column else 0)
-        outlet_water_temp_column = st.selectbox("Select the column for outlet water temperature",
-                                                options=columns_to_keep, index=columns_to_keep.index(
-                default_outlet_water_temp_column) if default_outlet_water_temp_column else 0)
-        inlet_temp_column = st.selectbox("Select the column for inlet temperature", options=columns_to_keep,
-                                         index=columns_to_keep.index(
-                                             default_inlet_temp_column) if default_inlet_temp_column else 0)
-        timestamp_column = st.selectbox("Select the column for timestamp", options=columns_to_keep,
-                                        index=columns_to_keep.index(
-                                            default_timestamp_column) if default_timestamp_column else 0)
-        heating_load_column = st.selectbox("Select the column for heating load", options=columns_to_keep,
-                                           index=columns_to_keep.index(
-                                               default_heating_load_column) if default_heating_load_column else 0)
-        submitted = st.form_submit_button("Submit")
+    try:
+        with st.form("column_mapping"):
+            water_flow_column = st.selectbox("Select the column for water flow", options=columns_to_keep,
+                                             index=columns_to_keep.index(
+                                                 default_water_flow_column) if default_water_flow_column else 0)
+            outlet_water_temp_column = st.selectbox("Select the column for outlet water temperature",
+                                                    options=columns_to_keep, index=columns_to_keep.index(
+                    default_outlet_water_temp_column) if default_outlet_water_temp_column else 0)
+            inlet_temp_column = st.selectbox("Select the column for inlet temperature", options=columns_to_keep,
+                                             index=columns_to_keep.index(
+                                                 default_inlet_temp_column) if default_inlet_temp_column else 0)
+            timestamp_column = st.selectbox("Select the column for timestamp", options=columns_to_keep,
+                                            index=columns_to_keep.index(
+                                                default_timestamp_column) if default_timestamp_column else 0)
+            heating_load_column = st.selectbox("Select the column for heating load", options=columns_to_keep,
+                                               index=columns_to_keep.index(
+                                                   default_heating_load_column) if default_heating_load_column else 0)
+            submitted = st.form_submit_button("Submit")
 
-    if submitted:
-        st.session_state['columns_selected'] = True
-        st.session_state['columns'] = {
-            'water_flow': water_flow_column,
-            'outlet_water_temp': outlet_water_temp_column,
-            'inlet_temp': inlet_temp_column,
-            'timestamp': timestamp_column,
-            'heating_load': heating_load_column
-        }
-        st.session_state['filtered_df'] = df
-        st.rerun()
+        if submitted:
+            st.session_state['columns_selected'] = True
+            st.session_state['columns'] = {
+                'water_flow': water_flow_column,
+                'outlet_water_temp': outlet_water_temp_column,
+                'inlet_temp': inlet_temp_column,
+                'timestamp': timestamp_column,
+                'heating_load': heating_load_column
+            }
+            st.session_state['filtered_df'] = df
+            st.rerun()
+    except Exception as e:
+        print(f"An error occurred while processing the dataset: {e}")
 
 
 @st.cache_data
@@ -212,36 +215,39 @@ def prompt_user_for_partial_columns(df):
     default_heating_load_column = get_most_similar_column("heating load", columns)
 
     submitted = False
-    with st.form("column_mapping_initial"):
+    try:
+        with st.form("column_mapping_initial"):
 
-        timestamp_column = st.selectbox("Select the column for timestamp", options=columns,
-                                        index=columns.index(
-                                            default_timestamp_column) if default_timestamp_column else 0)
-        heating_load_column = st.selectbox("Select the column for heating load", options=columns,
-                                           index=columns.index(
-                                               default_heating_load_column) if default_heating_load_column else 0)
-        submitted = st.form_submit_button("Submit")
+            timestamp_column = st.selectbox("Select the column for timestamp", options=columns,
+                                            index=columns.index(
+                                                default_timestamp_column) if default_timestamp_column else 0)
+            heating_load_column = st.selectbox("Select the column for heating load", options=columns,
+                                               index=columns.index(
+                                                   default_heating_load_column) if default_heating_load_column else 0)
+            submitted = st.form_submit_button("Submit")
 
-    if submitted:
-        df_copy = df.copy()
+        if submitted:
+            df_copy = df.copy()
 
-        df_copy[timestamp_column] = pd.to_datetime(df_copy[timestamp_column])
-        df_copy.set_index(timestamp_column, inplace=True)
+            df_copy[timestamp_column] = pd.to_datetime(df_copy[timestamp_column])
+            df_copy.set_index(timestamp_column, inplace=True)
 
-        for col in df_copy.columns:
-            df_copy[col] = pd.to_numeric(df_copy[col], errors='coerce')
+            for col in df_copy.columns:
+                df_copy[col] = pd.to_numeric(df_copy[col], errors='coerce')
 
-        # Drop columns that are entirely NaN
-        df_copy.dropna(axis=1, how='all', inplace=True)
+            # Drop columns that are entirely NaN
+            df_copy.dropna(axis=1, how='all', inplace=True)
 
-        # Reduce df_copy to a maximum of 50000 entries
-        if len(df_copy) > 50000:
-            df_copy = df_copy.iloc[:50000]
-            st.session_state['is_reduced_dataset'] = True
-        else:
-            st.session_state['is_reduced_dataset'] = False
+            # Reduce df_copy to a maximum of 50000 entries
+            if len(df_copy) > 50000:
+                df_copy = df_copy.iloc[:50000]
+                st.session_state['is_reduced_dataset'] = True
+            else:
+                st.session_state['is_reduced_dataset'] = False
 
-        st.session_state['filtered_df_initial'] = df_copy
-        st.session_state['timestamp_column'] = timestamp_column
-        st.session_state['heating_load_column'] = heating_load_column
-        st.rerun()
+            st.session_state['filtered_df_initial'] = df_copy
+            st.session_state['timestamp_column'] = timestamp_column
+            st.session_state['heating_load_column'] = heating_load_column
+            st.rerun()
+    except Exception as e:
+        print(f"An error occurred while processing the dataset: {e}")
