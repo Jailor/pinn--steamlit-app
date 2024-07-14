@@ -39,9 +39,9 @@ def show_performance_metrics(initial_df, standard_model, pinn_model, target_colu
     mape_pinn = (mae_pinn / mean_observed) * 100
 
     metrics_df = pd.DataFrame({
-        'Metric': ['RMSE', 'R2 Score', 'MAE', 'MAPE'],
-        'Standard Model': [rmse_standard, r2_standard, mae_standard, mape_standard],
-        'PINN Model': [rmse_pinn, r2_pinn, mae_pinn, mape_pinn]
+        'Metric': ['RMSE', 'CVRMSE', 'R2 Score', 'MAE', 'MAPE'],
+        'Standard Model': [rmse_standard, cvrmse_standard, r2_standard, mae_standard, mape_standard],
+        'PINN Model': [rmse_pinn, cvrmse_pinn, r2_pinn, mae_pinn, mape_pinn]
     })
 
     # Display the table
@@ -50,6 +50,7 @@ def show_performance_metrics(initial_df, standard_model, pinn_model, target_colu
 
     metrics = {
         'RMSE': [rmse_standard, rmse_pinn],
+        'CVRMSE': [cvrmse_standard, cvrmse_pinn],
         'R2 Score': [r2_standard, r2_pinn],
         'MAE': [mae_standard, mae_pinn],
         'MAPE': [mape_standard, mape_pinn]
